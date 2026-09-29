@@ -1,18 +1,15 @@
 # Ubuntu Dev Template
 
-A cross-platform Ubuntu-family development template for:
+A development template for Ubuntu running in:
 
 - Windows 11 + WSL 2
 - macOS + OrbStack Ubuntu machines
-- macOS + VMware Fusion Ubuntu virtual machines
-- regular Ubuntu Server installations
-- Linux Mint desktop installations
 
 This repository provides:
 
 - install scripts
 - dotfiles
-- sample nginx/docker/project templates
+- sample nginx/project templates
 - verification scripts
 
 ## Design goals
@@ -25,29 +22,25 @@ This repository provides:
 ## High-level choices
 
 - Shell: zsh + Oh My Zsh + Powerlevel10k
-- Desktop font: JetBrainsMono Nerd Font (native Linux desktop profile)
+- Terminal host font: JetBrainsMono Nerd Font
 - Terminal workspaces: tmux + Zellij + Herdr
 - Terminal file manager: Yazi (latest stable release)
 - Python: system python + venv + pipx + uv
 - Node.js: nvm + latest LTS + pnpm
-- Database: PostgreSQL native, other DBs primarily via containers
-- Web server: nginx native
-- Containers:
-  - Ubuntu VM / WSL: native Docker Engine inside Ubuntu
-  - OrbStack: prefer OrbStack's built-in container engine
+- Database clients: PostgreSQL, MySQL, Redis, and SQLite
+- Optional local services: PostgreSQL and nginx
 - Workspace root: `~/workspace`
 
 ## Installation profiles
 
-The bootstrapper reads `/etc/os-release` and chooses a default profile:
+The bootstrapper reads `/etc/os-release` and detects WSL or OrbStack. Only
+Ubuntu in these two environments is currently accepted. Fedora support is
+planned for a subsequent change; an unsupported host is detected and rejected
+before any installation, including during a dry run.
 
-- Ubuntu: `server`
-- Linux Mint: `desktop`
-
-The server profile installs the server-oriented modules. The desktop profile
-also installs JetBrainsMono Nerd Font, but leaves Docker, PostgreSQL, and nginx
-opt-in. Neither profile changes the login shell unless `--set-default-shell` is
-provided.
+The default `cli` profile installs the shared terminal development tools.
+PostgreSQL and nginx are opt-in. The login shell changes only when
+`--set-default-shell` is provided.
 
 Run the detected default from the repository root:
 
@@ -58,29 +51,30 @@ Run the detected default from the repository root:
 Choose a profile or customize its modules:
 
 ```bash
-./bootstrap.sh --profile desktop
-./bootstrap.sh --profile desktop --with docker,postgres
-./bootstrap.sh --profile server --skip nginx
-./bootstrap.sh --profile desktop --set-default-shell
+./bootstrap.sh --profile cli
+./bootstrap.sh --with postgres,nginx
+./bootstrap.sh --skip herdr
+./bootstrap.sh --set-default-shell
 ```
 
-Available modules are `base`, `shell`, `nerd-font`, `tmux`, `zellij`, `herdr`,
-`yazi`, `direnv`, `python`, `node`, `db-clients`, `postgres`, `nginx`, `docker`,
+Available modules are `base`, `shell`, `tmux`, `zellij`, `herdr`,
+`yazi`, `direnv`, `python`, `node`, `db-clients`, `postgres`, `nginx`,
 and `devtools`.
 
-Before replacing an existing distro-provided Docker installation, inspect the
-reported conflicting packages and explicitly approve their removal:
+The previous `server` and `desktop` profiles have been removed. Use `cli` and
+select optional services with `--with postgres,nginx`.
 
-```bash
-./bootstrap.sh --with docker --replace-docker-packages
-```
-
-The script also detects native Linux, WSL, or OrbStack automatically. Preview
-the execution plan without changing the system:
+Preview environment detection, module selection, script order, and the final
+verification command without changing the system:
 
 ```bash
 ./bootstrap.sh --dry-run
+./bootstrap.sh --with postgres,nginx --skip herdr --dry-run
 ```
+
+Dry runs do not invoke sudo, install packages, download tools, modify user
+configuration, or start services. They print the scripts that would execute;
+installed-tool checks run only during a real installation.
 
 On WSL without systemd, the first run writes `/etc/wsl.conf` and stops. Run
 `wsl --shutdown` from Windows, reopen Ubuntu, and run `./bootstrap.sh` again.
@@ -92,7 +86,6 @@ On WSL without systemd, the first run writes `/etc/wsl.conf` and stops. Run
 ```bash
 ./scripts/common/00-base.sh
 ./scripts/common/10-shell.sh
-./scripts/common/12-nerd-font.sh             # native Linux desktop
 ```
 
 Then run the modules you want. Every module remains a separate install script:
@@ -109,23 +102,11 @@ scripts/common/40-node.sh
 scripts/common/50-db-clients.sh
 scripts/common/60-postgres.sh
 scripts/common/70-nginx.sh
-scripts/common/75-docker-engine.sh            # Ubuntu VM / WSL
 scripts/wsl/00-wsl-preflight.sh           # WSL only
 scripts/wsl/01-write-wslconf.sh           # WSL only
-scripts/wsl/02-docker-engine.sh           # WSL compatibility entry point
 scripts/common/80-devtools.sh
 scripts/common/90-verify.sh
 ```
-
-For VMware Fusion or another regular Ubuntu VM, install Docker directly with:
-
-```bash
-./scripts/common/75-docker-engine.sh
-```
-
-Open a new login session after Docker installation so membership in the
-`docker` group takes effect. Docker's Ubuntu repository is configured with the
-underlying Ubuntu codename (`UBUNTU_CODENAME` on Linux Mint).
 
 The terminal tools can coexist. They are not configured to start or nest one
 another automatically:
@@ -147,14 +128,15 @@ replace `~/.zshrc` with the project template by running:
 ./scripts/common/10-shell.sh --install-zshrc-template
 ```
 
-The Nerd Font module installs the four standard `JetBrainsMono Nerd Font`
-styles for the current user. In GNOME Terminal, select `JetBrainsMono Nerd
-Font` rather than its `Mono` or `Propo` variants, then fully reopen the terminal.
+Install and select `JetBrainsMono Nerd Font` in the terminal on Windows or
+macOS, then fully reopen the terminal. The standalone font installer and check
+are retained for future desktop support and are not part of the `cli` profile.
 
 For an existing OpenVPN 3 Linux installation, the optional helper provides
 `vpn-up`, `vpn-down`, `vpn-status`, and `vpn-restart`. Run `vpn setup` once;
-credentials are stored in the desktop system keyring and are never written to
-the repository or a plaintext credentials file.
+credentials are stored in a Secret Service keyring and are never written to
+the repository or a plaintext credentials file. The helper requires an
+available, unlocked keyring in the guest session; see [OpenVPN helper notes](docs/openvpn-linux.md).
 
 The proxy helper is not an installer. Evaluate its output in the current shell:
 
@@ -166,13 +148,9 @@ eval "$(python3 scripts/common/99-proxy-switch.py off)"
 ## Important notes
 
 - **Fonts are installed on the terminal host OS**, not inside WSL or an
-  OrbStack guest. Do not opt into `nerd-font` inside those guests.
-- On Linux Mint desktop, the desktop itself is the host and the desktop profile
-  installs JetBrainsMono Nerd Font into `~/.local/share/fonts`.
+  OrbStack guest.
 - On WSL, keep active projects under the Linux filesystem, e.g. `~/workspace`, not primarily under `/mnt/c/...`.
 - On OrbStack, keep Ubuntu-side paths and shell workflows aligned with WSL.
-- Docker Engine officially supports Ubuntu 26.04 Resolute; the installer derives
-  the repository suite and architecture from the running Ubuntu system.
 
 ## Reference docs
 
@@ -180,8 +158,6 @@ These scripts follow the official docs as closely as practical:
 
 - WSL systemd and config: https://learn.microsoft.com/en-us/windows/wsl/systemd
 - WSL advanced config: https://learn.microsoft.com/en-us/windows/wsl/wsl-config
-- Docker Engine on Ubuntu: https://docs.docker.com/engine/install/ubuntu/
-- Docker post-install steps: https://docs.docker.com/engine/install/linux-postinstall/
 - OrbStack machines: https://docs.orbstack.dev/machines/
 - OrbStack machine CLI: https://docs.orbstack.dev/machines/commands
 - Ubuntu nginx install/config: https://ubuntu.com/server/docs/how-to/web-services/install-nginx/
@@ -195,7 +171,8 @@ These scripts follow the official docs as closely as practical:
 
 ## Development checks
 
-Run the profile and OS-detection smoke tests without installing packages:
+Run the environment and execution-plan tests without installing packages.
+They simulate WSL and OrbStack, so they can also run on the current Fedora host:
 
 ```bash
 ./tests/test-bootstrap.sh

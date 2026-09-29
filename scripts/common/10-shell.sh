@@ -14,8 +14,7 @@
 #   - Nerd Fonts: https://www.nerdfonts.com/
 #
 # Important:
-#   - Nerd Fonts must be installed on the terminal host. On Linux Mint desktop
-#     this is the current machine; for WSL/OrbStack it is the host OS.
+#   - Nerd Fonts must be installed on the terminal host OS for WSL/OrbStack.
 #   - Existing .zshrc files are preserved unless --install-zshrc-template is
 #     explicitly provided. The original is backed up before replacement.
 # =============================================================================
@@ -122,8 +121,7 @@ main() {
   cat <<MSG
 [10-shell] done.
 [10-shell] next steps:
-  1. On Linux Mint desktop, run: ./scripts/common/12-nerd-font.sh
-     For WSL/OrbStack, install a Nerd Font on the terminal host OS instead.
+  1. Install a Nerd Font on the terminal host OS for WSL/OrbStack.
   2. Start zsh manually, or rerun bootstrap with --set-default-shell.
   3. Optionally run: p10k configure
 MSG

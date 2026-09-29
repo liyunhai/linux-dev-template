@@ -16,7 +16,6 @@ main() {
   mkdir -p "$HOME/workspace"/{apps,libs,infra,playground}
 
   echo "[orb-machine-setup] done."
-  echo "[orb-machine-setup] use OrbStack host-side Docker/containers; do not install another Docker Engine in this machine unless you have a very specific reason."
 }
 
 main "$@"

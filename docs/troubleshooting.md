@@ -8,12 +8,11 @@ Preview detection without changing the system:
 ./bootstrap.sh --dry-run
 ```
 
-Linux Mint should report its Mint release and its underlying Ubuntu codename,
-for example Mint 22.x with `noble`. Override only the install profile, not the
-detected repository codename:
+Supported hosts report Ubuntu, platform `wsl` or `orbstack`, and profile `cli`.
+Preview optional services with:
 
 ```bash
-./bootstrap.sh --profile server --dry-run
+./bootstrap.sh --with postgres,nginx --dry-run
 ```
 
 ## WSL: systemd not active
@@ -30,42 +29,14 @@ If not:
 2. run `wsl --shutdown` from Windows
 3. reopen the distro
 
-## Docker permission denied
-Make sure your user is in the docker group:
+## Unsupported environment or old profile
 
-```bash
-groups
-```
+Only Ubuntu in WSL 2 or OrbStack is currently accepted. An unsupported host,
+including Fedora until its adaptation is complete, exits before installing
+anything. `--dry-run` reports the detected OS/platform and the support error.
 
-If not, add it and re-login:
-
-```bash
-sudo usermod -aG docker "$USER"
-```
-
-Then open a new login session. Running `newgrp docker` can update the current
-terminal temporarily, but a fresh login is the recommended final check.
-
-## Docker reports conflicting packages
-
-The Docker installer does not silently remove an existing distro-provided
-Docker, Compose, Podman compatibility package, containerd, or runc. Review the
-listed packages first. If Docker CE should replace them, rerun with:
-
-```bash
-./bootstrap.sh --with docker --replace-docker-packages
-```
-
-## Docker installer says systemd is not active
-
-Regular Ubuntu Server and VMware Fusion guests should boot with systemd. Check:
-
-```bash
-ps -p 1 -o comm=
-```
-
-On WSL, run `scripts/wsl/01-write-wslconf.sh`, execute `wsl --shutdown` from
-Windows, reopen Ubuntu, and rerun the installer.
+Use `--profile cli` instead of the removed `server` or `desktop` profiles.
+Add local services explicitly with `--with postgres,nginx`.
 
 ## nvm not found after install
 Reload shell or source your shell config:
@@ -87,17 +58,10 @@ Ensure `~/.local/bin` is on PATH.
 
 ## Yazi icons are missing or terminal text is widely spaced
 
-Install or repair the desktop font:
-
-```bash
-./scripts/common/12-nerd-font.sh --force
-./checks/verify-nerd-font.sh
-```
-
-In the terminal profile, select `JetBrainsMono Nerd Font`. Do not select
-`JetBrainsMono Nerd Font Mono` if GNOME Terminal renders excessive character
-spacing, and do not select the proportional `Propo` variant. Fully close and
-reopen the terminal after changing the font.
+Install or repair the font on the Windows or macOS terminal host. In the
+terminal profile, select `JetBrainsMono Nerd Font` and fully close and reopen
+the terminal. Installing a font inside the guest will not update the host
+terminal font.
 
 ## OpenVPN helper credentials need to be changed
 
@@ -108,5 +72,6 @@ vpn setup
 ```
 
 Remove the saved profile and credentials completely with `vpn forget`. If the
-keyring is locked after login, unlock the Login keyring in the desktop password
-prompt and retry `vpn-up`.
+keyring is locked, unlock it in the same session and retry `vpn-up`. The helper
+requires a Secret Service keyring accessible from the guest; see
+[OpenVPN helper notes](openvpn-linux.md).

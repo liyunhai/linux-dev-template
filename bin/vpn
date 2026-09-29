@@ -21,7 +21,7 @@ Usage:
 
 The commands vpn-up, vpn-down, vpn-restart, and vpn-status are equivalent to
 their two-word forms. Credentials are stored in the desktop Secret Service
-(GNOME Keyring on Linux Mint), never in this script or the profile file.
+(for example GNOME Keyring), never in this script or the profile file.
 EOF
 }
 

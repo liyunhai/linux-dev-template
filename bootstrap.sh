@@ -10,18 +10,14 @@ PROFILE=""
 WITH_MODULES=""
 SKIP_MODULES=""
 CHANGE_DEFAULT_SHELL=false
-ALLOW_DOCKER_PACKAGE_REPLACEMENT=false
 
 ALL_MODULES=(
-  base shell nerd-font tmux zellij herdr yazi direnv python node db-clients
-  postgres nginx docker devtools
-)
-SERVER_MODULES=(
   base shell tmux zellij herdr yazi direnv python node db-clients
-  postgres nginx docker devtools
+  postgres nginx devtools
 )
-DESKTOP_MODULES=(
-  base shell nerd-font tmux zellij herdr yazi direnv python node db-clients devtools
+CLI_MODULES=(
+  base shell tmux zellij herdr yazi direnv python node db-clients
+  devtools
 )
 
 log() { printf '[bootstrap] %s\n' "$*"; }
@@ -31,43 +27,39 @@ usage() {
   cat <<'EOF'
 Usage: ./bootstrap.sh [options]
 
-Installs a development environment on Ubuntu or Linux Mint. Ubuntu defaults to
-the server profile; Linux Mint defaults to the desktop profile.
+Installs a development environment on Ubuntu in WSL 2 or OrbStack.
+The default cli profile installs terminal development tools. PostgreSQL and
+nginx are optional modules.
 
 Options:
-  --profile PROFILE       Use server or desktop instead of auto-detection.
+  --profile PROFILE       Use the cli profile (default).
   --with MODULES          Add comma-separated modules to the profile.
   --skip MODULES          Remove comma-separated modules from the profile.
   --set-default-shell     Change the login shell to zsh after installing it.
-  --replace-docker-packages
-                          Allow Docker CE to remove conflicting distro packages.
   --dry-run               Print the execution plan without changing the system.
   -h, --help              Show this help.
 
 Modules:
-  base, shell, nerd-font, tmux, zellij, herdr, yazi, direnv, python, node,
-  db-clients, postgres, nginx, docker, devtools
+  base, shell, tmux, zellij, herdr, yazi, direnv, python, node,
+  db-clients, postgres, nginx, devtools
 
 Examples:
-  ./bootstrap.sh --profile desktop
-  ./bootstrap.sh --profile desktop --with docker,postgres
-  ./bootstrap.sh --profile server --skip nginx --set-default-shell
+  ./bootstrap.sh --dry-run
+  ./bootstrap.sh --with postgres,nginx --dry-run
+  ./bootstrap.sh --profile cli --skip herdr --set-default-shell
 EOF
 }
 
-detect_platform() {
-  if grep -qi microsoft /proc/version 2>/dev/null; then
-    printf '%s' 'wsl'
-  elif [[ "$(uname -r)" == *[Oo]rbstack* ]] || [[ -e /opt/orbstack-guest ]]; then
-    printf '%s' 'orbstack'
-  else
-    printf '%s' 'native'
-  fi
-}
-
 check_host() {
-  [[ "$EUID" -ne 0 ]] || die "run as your normal user, not with sudo"
-  require_supported_ubuntu_family || exit 1
+  if ! "$DRY_RUN" && [[ "$EUID" -eq 0 ]]; then
+    die "run as your normal user, not with sudo"
+  fi
+  load_os_release || exit 1
+  declare -g PLATFORM
+  PLATFORM="$(detect_platform)"
+  log "detected OS: $OS_NAME"
+  log "detected platform: $PLATFORM"
+  require_supported_environment || exit 1
 }
 
 run_script() {
@@ -121,13 +113,10 @@ select_modules() {
   declare -ga SELECTED_MODULE_LIST=()
 
   case "$PROFILE" in
-    server)
-      for module in "${SERVER_MODULES[@]}"; do SELECTED_MODULES["$module"]=true; done
+    cli)
+      for module in "${CLI_MODULES[@]}"; do SELECTED_MODULES["$module"]=true; done
       ;;
-    desktop)
-      for module in "${DESKTOP_MODULES[@]}"; do SELECTED_MODULES["$module"]=true; done
-      ;;
-    *) die "profile must be server or desktop: $PROFILE" ;;
+    *) die "profile must be cli: $PROFILE; enable optional services with --with postgres,nginx" ;;
   esac
 
   add_csv_modules "$WITH_MODULES" SELECTED_MODULES
@@ -136,15 +125,12 @@ select_modules() {
   for module in "${ALL_MODULES[@]}"; do
     [[ -n "${SELECTED_MODULES[$module]:-}" ]] && SELECTED_MODULE_LIST+=("$module")
   done
+  return 0
 }
 
 run_selected_module() {
   local module="$1" script="$2"
   [[ -n "${SELECTED_MODULES[$module]:-}" ]] || return 0
-  if [[ "$module" == docker && "$PLATFORM" == orbstack ]]; then
-    log "using OrbStack's built-in Docker engine"
-    return 0
-  fi
   run_script "$script"
 }
 
@@ -185,7 +171,6 @@ main() {
         shift
         ;;
       --set-default-shell) CHANGE_DEFAULT_SHELL=true ;;
-      --replace-docker-packages) ALLOW_DOCKER_PACKAGE_REPLACEMENT=true ;;
       -h|--help) usage; exit 0 ;;
       *) die "unknown option: $1" ;;
     esac
@@ -193,14 +178,11 @@ main() {
   done
 
   check_host
-  PROFILE="${PROFILE:-$(default_install_profile)}"
+  PROFILE="${PROFILE:-cli}"
   select_modules
-  declare -g PLATFORM
-  PLATFORM="$(detect_platform)"
-  log "detected OS: $OS_NAME (Ubuntu base: $UBUNTU_BASE_CODENAME)"
-  log "detected platform: $PLATFORM; install profile: $PROFILE"
+  log "install profile: $PROFILE"
   log "selected modules: ${SELECTED_MODULE_LIST[*]}"
-  export CHANGE_DEFAULT_SHELL ALLOW_DOCKER_PACKAGE_REPLACEMENT
+  export CHANGE_DEFAULT_SHELL
   "$DRY_RUN" || sudo -v
 
   case "$PLATFORM" in
@@ -213,7 +195,6 @@ main() {
 
   run_selected_module base scripts/common/00-base.sh
   run_selected_module shell scripts/common/10-shell.sh
-  run_selected_module nerd-font scripts/common/12-nerd-font.sh
   run_selected_module tmux scripts/common/15-tmux.sh
   run_selected_module zellij scripts/common/16-zellij.sh
   run_selected_module herdr scripts/common/17-herdr.sh
@@ -224,17 +205,23 @@ main() {
   run_selected_module db-clients scripts/common/50-db-clients.sh
   run_selected_module postgres scripts/common/60-postgres.sh
   run_selected_module nginx scripts/common/70-nginx.sh
-  run_selected_module docker scripts/common/75-docker-engine.sh
   run_selected_module devtools scripts/common/80-devtools.sh
+
+  if ((${#SELECTED_MODULE_LIST[@]} == 0)); then
+    log "no modules selected; skipping module checks"
+    return 0
+  fi
 
   if "$DRY_RUN"; then
     run_script scripts/common/90-verify.sh "${SELECTED_MODULE_LIST[@]}"
   else
     load_installed_tool_paths
     run_script scripts/common/90-verify.sh "${SELECTED_MODULE_LIST[@]}"
-    log "installation complete; open a new login session to refresh shell and Docker group membership"
+    log "installation complete; open a new login session to refresh the shell environment"
   fi
 }
 
-trap 'printf "[bootstrap] ERROR: failed at %s (line %s)\n" "$CURRENT_STEP" "$LINENO" >&2' ERR
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  trap 'printf "[bootstrap] ERROR: failed at %s (line %s)\n" "$CURRENT_STEP" "$LINENO" >&2' ERR
+  main "$@"
+fi

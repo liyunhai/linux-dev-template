@@ -1,7 +1,7 @@
 # WSL notes
 
 ## Why systemd matters
-Many services such as Docker and PostgreSQL integrate better when systemd is enabled.
+Optional local services such as PostgreSQL and nginx integrate better when systemd is enabled.
 
 ## Why `~/workspace`
 Microsoft recommends storing Linux projects in the Linux filesystem for better performance with Linux tooling, instead of primarily using `/mnt/c/...`.

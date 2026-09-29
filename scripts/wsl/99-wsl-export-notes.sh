@@ -20,7 +20,7 @@ From Windows PowerShell, example export/import commands:
 
 After import, launch the new distro and verify:
   - systemd is active
-  - docker works
-  - postgres/nginx work
+  - terminal development tools work
+  - any selected postgres/nginx services work
   - dotfiles are in place
 EOF2

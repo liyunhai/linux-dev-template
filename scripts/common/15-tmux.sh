@@ -13,7 +13,7 @@ set -euo pipefail
 # 设计原则：
 #   - 尽量幂等：重复执行不会反复破坏环境
 #   - 尽量保守：已有配置优先备份，不直接硬覆盖
-#   - WSL / OrbStack / 普通 Ubuntu 都能使用
+#   - WSL / OrbStack Ubuntu 都能使用
 #
 # 参考：
 #   - TPM 官方建议通过 git clone 安装到 ~/.tmux/plugins/tpm

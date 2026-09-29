@@ -1,6 +1,6 @@
 # ~/.zshrc
 #
-# Shared zsh configuration for Ubuntu and Linux Mint development machines.
+# Shared zsh configuration for WSL and OrbStack Ubuntu development machines.
 #
 # Design goals:
 # - readable and easy to modify
@@ -20,8 +20,6 @@ plugins=(
   z
   extract
   sudo
-  docker
-  docker-compose
   python
   pip
   node

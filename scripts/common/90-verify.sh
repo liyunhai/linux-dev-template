@@ -44,7 +44,7 @@ main() {
   if (($#)); then
     for module in "$@"; do REQUESTED_MODULES["$module"]=true; done
   else
-    for module in shell nerd-font tmux zellij herdr yazi python node postgres nginx docker; do
+    for module in shell tmux zellij herdr yazi python node; do
       REQUESTED_MODULES["$module"]=true
     done
   fi
@@ -61,7 +61,6 @@ main() {
   run_module_check node verify-node.sh
   run_module_check postgres verify-postgres.sh
   run_module_check nginx verify-nginx.sh
-  run_module_check docker verify-docker.sh
 
   log "all checks passed"
 }

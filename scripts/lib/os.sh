@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# Shared Ubuntu-family distribution helpers. Call load_os_release before using
-# OS_ID, OS_NAME, or UBUNTU_BASE_CODENAME.
+# Shared environment helpers. Call load_os_release before using OS_ID or
+# OS_NAME. Installation currently targets Ubuntu in WSL 2 or OrbStack.
 
 load_os_release() {
   local os_release_file="${OS_RELEASE_FILE:-/etc/os-release}"
-  local ID="" PRETTY_NAME="" VERSION_CODENAME="" UBUNTU_CODENAME=""
+  local ID="" PRETTY_NAME=""
 
   [[ -r "$os_release_file" ]] || {
     printf '[os] ERROR: OS release file not found: %s\n' "$os_release_file" >&2
@@ -17,42 +17,30 @@ load_os_release() {
   OS_ID="${ID:-unknown}"
   OS_NAME="${PRETTY_NAME:-$OS_ID}"
 
-  case "$OS_ID" in
-    ubuntu)
-      UBUNTU_BASE_CODENAME="${VERSION_CODENAME:-}"
-      ;;
-    linuxmint)
-      UBUNTU_BASE_CODENAME="${UBUNTU_CODENAME:-}"
-      ;;
-    *)
-      UBUNTU_BASE_CODENAME=""
-      ;;
-  esac
-
-  export OS_ID OS_NAME UBUNTU_BASE_CODENAME
+  export OS_ID OS_NAME
 }
 
-require_supported_ubuntu_family() {
+detect_platform() {
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    printf '%s' wsl
+  elif [[ "$(uname -r)" == *[Oo]rbstack* ]] || [[ -e /opt/orbstack-guest ]]; then
+    printf '%s' orbstack
+  else
+    printf '%s' native
+  fi
+}
+
+require_supported_environment() {
   load_os_release || return 1
-  case "$OS_ID" in
-    ubuntu|linuxmint) ;;
+  local platform
+  platform="$(detect_platform)"
+  case "${OS_ID}:${platform}" in
+    ubuntu:wsl|ubuntu:orbstack) return 0 ;;
     *)
-      printf '[os] ERROR: Ubuntu or Linux Mint is required (detected: %s)\n' "$OS_NAME" >&2
+      printf '[os] ERROR: Ubuntu in WSL 2 or OrbStack is required (detected: %s; platform: %s)\n' \
+        "$OS_NAME" "$platform" >&2
       return 1
       ;;
-  esac
-
-  [[ -n "$UBUNTU_BASE_CODENAME" ]] || {
-    printf '[os] ERROR: unable to determine the Ubuntu base codename for %s\n' "$OS_NAME" >&2
-    return 1
-  }
-}
-
-default_install_profile() {
-  load_os_release || return 1
-  case "$OS_ID" in
-    linuxmint) printf '%s' desktop ;;
-    *) printf '%s' server ;;
   esac
 }
 

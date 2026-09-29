@@ -3,8 +3,7 @@
 ## Layered model
 
 ### L0 Host / virtualization
-- WSL 2 on Windows 11, OrbStack on macOS, a regular Ubuntu VM, or Linux Mint
-- Ubuntu Server or Linux Mint desktop base machine
+- Ubuntu in WSL 2 on Windows 11 or OrbStack on macOS
 - systemd enabled where appropriate
 
 ### L1 Base packages
@@ -15,7 +14,7 @@ Common tools used by everything else:
 - zsh
 - Oh My Zsh
 - Powerlevel10k
-- JetBrainsMono Nerd Font on native Linux desktops
+- JetBrainsMono Nerd Font on the terminal host OS
 - zsh plugins
 - tmux
 - Zellij
@@ -33,37 +32,37 @@ Common tools used by everything else:
 - Node.js: nvm + current LTS node
 
 ### L5 Data + web services
-- PostgreSQL native
-- nginx native
-- Other data services containerized when useful
+- PostgreSQL and nginx as optional local services
+- Shared database client tools
 
-### L6 Containers
-- Ubuntu VM / WSL: native Docker Engine inside Ubuntu
-- OrbStack: prefer built-in engine provided by OrbStack
-
-### L7 Dev quality / tooling
+### L6 Dev quality / tooling
 - pre-commit
 - shellcheck
 - yamllint
 - shfmt
 - GitHub CLI
 
-### L8 Template assets
+### L7 Template assets
 - dotfiles
 - service configs
-- compose examples
 - verification scripts
 
 ## Profiles and platform detection
 
 `bootstrap.sh` separates the OS, runtime platform, and install profile:
 
-- OS controls compatibility and the Ubuntu repository codename. Both Ubuntu
-  and Linux Mint are supported.
-- Platform controls WSL and OrbStack integration; other systems are `native`.
-- Profile controls module selection. `server` includes services and Docker;
-  `desktop` adds the local Nerd Font while keeping Docker, PostgreSQL, and nginx
-  opt-in.
+- OS and platform jointly control compatibility: Ubuntu in WSL or OrbStack is
+  accepted; other environments are rejected before installation.
+- Platform controls WSL and OrbStack integration. Detection can also report
+  `native`, which is currently unsupported by the bootstrapper.
+- The `cli` profile selects shared terminal development modules. PostgreSQL
+  and nginx are opt-in through `--with`.
+- `--dry-run` reports detection and prints the execution plan without running
+  installers or installed-tool checks.
+
+The standalone Nerd Font installer and check remain as shared building blocks
+for future desktop support. Fonts for WSL and OrbStack belong on the terminal
+host OS.
 
 Profiles only select shared modules. Distribution-specific scripts should be
 added only when behavior genuinely cannot be expressed by the helpers under

@@ -15,7 +15,6 @@ main() {
   echo "[orb-preflight] hostname: $(hostname)"
   echo "[orb-preflight] kernel: $(uname -r)"
   echo "[orb-preflight] init process: $(ps -p 1 -o comm= | tr -d ' ')"
-  echo "[orb-preflight] reminder: prefer OrbStack's built-in Docker engine instead of nesting another engine inside this Ubuntu machine."
 }
 
 main "$@"
