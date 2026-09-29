@@ -25,11 +25,13 @@ Common tools used by everything else:
 - Yazi
 - host-side Nerd Font configuration
 
-The `tmux` module owns program installation, clipboard dependencies, TPM,
+The `tmux` module owns program installation, TPM,
 the project configuration, and automatic plugin installation. The base module
 does not install tmux. TPM's command-line installer uses a temporary tmux server
 with a separate socket, leaving active user sessions available. Cleanup runs
 on both success and failure.
+Git is supplied by the base module and checked before tmux installation.
+Wayland clipboard tools are supplied by the separate clipboard module.
 
 ### L3 Environment management
 - direnv for per-project env activation

@@ -5,7 +5,7 @@ set -euo pipefail
 # 15-tmux.sh
 #
 # 作用：
-#   1. 安装 tmux 与安装插件所需的基础依赖
+#   1. 检查已有 Git，安装 tmux（Ubuntu 保留 xclip/xsel）
 #   2. 安装 TPM（Tmux Plugin Manager）
 #   3. 备份有差异的 ~/.tmux.conf 后安装项目配置
 #   4. 在独立的临时 tmux 服务中自动安装配置声明的插件
@@ -76,18 +76,19 @@ print_plan() {
   printf '  config: %s -> %s (back up differences)\n' "$TEMPLATE_TMUX_CONF" "$TARGET_TMUX_CONF"
   printf '  plugins: install @plugin entries in %s through TPM bin/install_plugins\n' "$TEMPLATE_TMUX_CONF"
   printf '  temporary tmux service: separate socket, cleaned up after installation\n'
+  printf '  requires: Git installed by 00-base.sh; optional Wayland clipboard tools come from 13-clipboard.sh\n'
   printf '  requires: ~/.tmux.conf as the active user config; consolidate an existing XDG tmux/tmux.conf first\n'
 }
 
 install_tmux_packages() {
-  log "installing tmux prerequisites..."
+  log "installing tmux packages..."
   install_module_packages tmux
 
   # 说明：
   # - tmux: 主程序
-  # - git: 安装 TPM 和插件时需要
+  # - Git 由 00-base 提供；这里只检测，不安装
   # - Ubuntu 客户机保留 xclip / xsel 依赖
-  # - Fedora 安装 wl-clipboard，支持 Wayland 环境下的 tmux-yank
+  # - Wayland 剪贴板工具由独立的 13-clipboard 模块提供
 }
 
 install_tpm() {
@@ -160,6 +161,7 @@ main() {
   fi
   [[ "$EUID" -ne 0 ]] || die "run as your normal user, not with sudo"
   require_command sudo
+  command -v git >/dev/null 2>&1 || die "git is required for TPM and plugins; run 00-base.sh first"
   [[ -f "$TEMPLATE_TMUX_CONF" ]] || die "template tmux config not found: $TEMPLATE_TMUX_CONF"
 
   # The template and reload shortcut use ~/.tmux.conf. Tmux and TPM prioritize

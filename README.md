@@ -151,11 +151,13 @@ replace `~/.zshrc` with the project template by running:
 ### tmux installation
 
 `00-base.sh` does not install tmux, so `--skip tmux` also excludes its program
-installation. `15-tmux.sh` installs tmux, Git and clipboard
-dependencies (Fedora `wl-clipboard`; Ubuntu `xclip`/`xsel`), clones or updates
-TPM, backs up a different `~/.tmux.conf` before installing the project template,
+installation. `15-tmux.sh` installs tmux (plus `xclip`/`xsel` on Ubuntu), checks
+the existing Git command, clones or updates TPM, backs up a different
+`~/.tmux.conf` before installing the project template,
 and automatically installs its declared plugins. Existing plugin repositories
 are retained; installing missing plugins does not update existing plugins.
+Git is provided by `00-base.sh`; Wayland clipboard commands are provided by
+`13-clipboard.sh`. The tmux module does not install either shared tool.
 
 The plugins are TPM, tmux-sensible, tmux-yank, tmux-resurrect, tmux-continuum,
 and Catppuccin. TPM's official

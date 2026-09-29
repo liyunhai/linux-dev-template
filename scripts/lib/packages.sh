@@ -31,8 +31,8 @@ packages_for_module() {
     nerd-font) packages=(fontconfig) ;;
     clipboard) packages=(wl-clipboard) ;;
     tmux)
-      packages=(tmux git)
-      if [[ "$OS_ID" == fedora ]]; then packages+=(wl-clipboard); else packages+=(xclip xsel); fi
+      packages=(tmux)
+      [[ "$OS_ID" != ubuntu ]] || packages+=(xclip xsel)
       ;;
     alacritty|ghostty|zellij|herdr) ;;
     yazi)
