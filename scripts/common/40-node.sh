@@ -48,8 +48,14 @@ main() {
   nvm alias default 'lts/*'
   nvm use default
 
-  echo "[40-node] updating npm and installing global packages..."
-  npm install -g npm@latest pnpm typescript tsx eslint prettier pm2 npm-check-updates
+  echo "[40-node] updating npm..."
+  npm install -g npm@latest
+
+  echo "[40-node] installing global packages..."
+  # npm 12 requires explicit, per-invocation approval for install scripts.
+  # pnpm and tsx's esbuild dependency need their install scripts to run.
+  npm install -g pnpm typescript tsx eslint prettier pm2 npm-check-updates \
+    --allow-scripts=pnpm,esbuild
 
   cat <<MSG
 [40-node] done.
