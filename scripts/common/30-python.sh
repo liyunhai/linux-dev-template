@@ -39,7 +39,7 @@ main() {
     "$HOME/.config/pip/pip.conf"
 
   echo "[30-python] ensuring pipx path..."
-  python3 -m pipx ensurepath || true
+  python3 -m pipx ensurepath
 
   if ! command -v uv >/dev/null 2>&1; then
     echo "[30-python] installing uv via official installer..."
@@ -51,10 +51,10 @@ main() {
   export PATH="$HOME/.local/bin:$PATH"
 
   echo "[30-python] installing python dev tools with pipx..."
-  pipx install --force ruff || true
-  pipx install --force black || true
-  pipx install --force pytest || true
-  pipx install --force pre-commit || true
+  pipx install --force ruff
+  pipx install --force black
+  pipx install --force pytest
+  pipx install --force pre-commit
 
   cat <<MSG
 [30-python] done.
