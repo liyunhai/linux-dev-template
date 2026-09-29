@@ -1,6 +1,6 @@
-# Ubuntu Dev Template
+# Linux Dev Template
 
-A development template for Ubuntu running in:
+`linux-dev-template` provides a development environment for Ubuntu running in:
 
 - Windows 11 + WSL 2
 - macOS + OrbStack Ubuntu machines

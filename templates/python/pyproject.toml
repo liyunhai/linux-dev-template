@@ -1,7 +1,7 @@
 [project]
 name = "sample-python-app"
 version = "0.1.0"
-description = "Sample Python project template for the Ubuntu dev template"
+description = "Sample Python project template for linux-dev-template"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []

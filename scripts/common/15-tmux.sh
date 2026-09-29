@@ -22,7 +22,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 假定目录结构为：
-# ubuntu-dev-template/
+# linux-dev-template/
 #   scripts/common/15-tmux.sh
 #   dotfiles/.tmux.conf
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"

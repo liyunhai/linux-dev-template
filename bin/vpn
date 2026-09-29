@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# Stable keyring namespace from the original project name. Keep this identifier
+# so existing credentials remain readable after the linux-dev-template rename.
 APP_ATTRIBUTE="ubuntu-dev-template-openvpn"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/openvpn3-helper"
 PROFILE_FILE="${CONFIG_DIR}/profile"

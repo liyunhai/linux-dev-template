@@ -15,8 +15,8 @@ cat <<'EOF2'
 From Windows PowerShell, example export/import commands:
 
   wsl --shutdown
-  wsl --export Ubuntu-24.04 D:\WSL\ubuntu-dev-template.tar
-  wsl --import Ubuntu-24.04-Dev D:\WSL\Ubuntu-24.04-Dev D:\WSL\ubuntu-dev-template.tar --version 2
+  wsl --export Ubuntu-24.04 D:\WSL\linux-dev-template.tar
+  wsl --import Ubuntu-24.04-Dev D:\WSL\Ubuntu-24.04-Dev D:\WSL\linux-dev-template.tar --version 2
 
 After import, launch the new distro and verify:
   - systemd is active
