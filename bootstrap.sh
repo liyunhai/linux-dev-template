@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${REPO_ROOT}/scripts/lib/os.sh"
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 
 DRY_RUN=false
 CURRENT_STEP="startup"
@@ -12,13 +12,14 @@ SKIP_MODULES=""
 CHANGE_DEFAULT_SHELL=false
 
 ALL_MODULES=(
-  base shell tmux zellij herdr yazi direnv python node db-clients
+  base shell nerd-font clipboard tmux zellij herdr yazi direnv python node db-clients
   postgres nginx devtools
 )
 CLI_MODULES=(
   base shell tmux zellij herdr yazi direnv python node db-clients
   devtools
 )
+DESKTOP_MODULES=("${CLI_MODULES[@]}" nerd-font clipboard)
 
 log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
@@ -27,12 +28,12 @@ usage() {
   cat <<'EOF'
 Usage: ./bootstrap.sh [options]
 
-Installs a development environment on Ubuntu in WSL 2 or OrbStack.
-The default cli profile installs terminal development tools. PostgreSQL and
-nginx are optional modules.
+Installs a development environment on Fedora or Ubuntu in WSL 2 or OrbStack.
+Fedora Workstation defaults to desktop; Fedora Server and Ubuntu guests default
+to cli. PostgreSQL and nginx are optional modules.
 
 Options:
-  --profile PROFILE       Use the cli profile (default).
+  --profile PROFILE       Use cli or desktop instead of auto-detection.
   --with MODULES          Add comma-separated modules to the profile.
   --skip MODULES          Remove comma-separated modules from the profile.
   --set-default-shell     Change the login shell to zsh after installing it.
@@ -40,7 +41,7 @@ Options:
   -h, --help              Show this help.
 
 Modules:
-  base, shell, tmux, zellij, herdr, yazi, direnv, python, node,
+  base, shell, nerd-font, clipboard, tmux, zellij, herdr, yazi, direnv, python, node,
   db-clients, postgres, nginx, devtools
 
 Examples:
@@ -116,11 +117,19 @@ select_modules() {
     cli)
       for module in "${CLI_MODULES[@]}"; do SELECTED_MODULES["$module"]=true; done
       ;;
-    *) die "profile must be cli: $PROFILE; enable optional services with --with postgres,nginx" ;;
+    desktop)
+      for module in "${DESKTOP_MODULES[@]}"; do SELECTED_MODULES["$module"]=true; done
+      ;;
+    *) die "profile must be cli or desktop: $PROFILE; enable optional services with --with postgres,nginx" ;;
   esac
 
   add_csv_modules "$WITH_MODULES" SELECTED_MODULES
   remove_csv_modules "$SKIP_MODULES" SELECTED_MODULES
+
+  if [[ "$PLATFORM" != native ]] \
+    && [[ -n "${SELECTED_MODULES[nerd-font]:-}${SELECTED_MODULES[clipboard]:-}" ]]; then
+    die "nerd-font and clipboard modules require a native Fedora host; configure the terminal host for WSL/OrbStack"
+  fi
 
   for module in "${ALL_MODULES[@]}"; do
     [[ -n "${SELECTED_MODULES[$module]:-}" ]] && SELECTED_MODULE_LIST+=("$module")
@@ -132,6 +141,16 @@ run_selected_module() {
   local module="$1" script="$2"
   [[ -n "${SELECTED_MODULES[$module]:-}" ]] || return 0
   run_script "$script"
+  if "$DRY_RUN"; then
+    local package_list
+    package_list="$(packages_for_module "$module")" || die "cannot resolve packages for $module"
+    if [[ -n "$package_list" ]]; then
+      printf '    packages (%s): %s\n' "$PACKAGE_MANAGER" "${package_list//$'\n'/ }"
+    fi
+    if [[ "$module" == postgres && "$OS_ID" == fedora ]]; then
+      log "PostgreSQL: initialize only a new data directory, then enable the service"
+    fi
+  fi
 }
 
 prepare_wsl() {
@@ -148,7 +167,7 @@ load_installed_tool_paths() {
   export PATH="${HOME}/.local/bin:${HOME}/bin:${PATH}"
   export NVM_DIR="${HOME}/.nvm"
   # shellcheck disable=SC1091
-  [[ -s "${NVM_DIR}/nvm.sh" ]] && source "${NVM_DIR}/nvm.sh"
+  if [[ -s "${NVM_DIR}/nvm.sh" ]]; then source "${NVM_DIR}/nvm.sh"; fi
 }
 
 main() {
@@ -178,9 +197,10 @@ main() {
   done
 
   check_host
-  PROFILE="${PROFILE:-cli}"
+  PROFILE="${PROFILE:-$(default_install_profile)}"
   select_modules
   log "install profile: $PROFILE"
+  log "package manager: $PACKAGE_MANAGER"
   log "selected modules: ${SELECTED_MODULE_LIST[*]}"
   export CHANGE_DEFAULT_SHELL
   "$DRY_RUN" || sudo -v
@@ -195,6 +215,8 @@ main() {
 
   run_selected_module base scripts/common/00-base.sh
   run_selected_module shell scripts/common/10-shell.sh
+  run_selected_module nerd-font scripts/common/12-nerd-font.sh
+  run_selected_module clipboard scripts/common/13-clipboard.sh
   run_selected_module tmux scripts/common/15-tmux.sh
   run_selected_module zellij scripts/common/16-zellij.sh
   run_selected_module herdr scripts/common/17-herdr.sh

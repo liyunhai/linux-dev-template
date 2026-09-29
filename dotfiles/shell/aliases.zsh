@@ -1,4 +1,4 @@
-# Common aliases shared across WSL and OrbStack.
+# Common aliases shared across Fedora, WSL, and OrbStack.
 
 alias ll='ls -lah'
 alias la='ls -A'

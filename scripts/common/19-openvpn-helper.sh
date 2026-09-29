@@ -2,7 +2,11 @@
 set -Eeuo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 BIN_DIR="${HOME}/.local/bin"
+
+require_supported_environment
 
 echo "[19-openvpn-helper] checking OpenVPN 3..."
 command -v openvpn3 >/dev/null 2>&1 || {
@@ -12,8 +16,7 @@ command -v openvpn3 >/dev/null 2>&1 || {
 
 if ! command -v secret-tool >/dev/null 2>&1; then
   echo "[19-openvpn-helper] installing the system keyring command..."
-  sudo apt update
-  sudo apt install -y libsecret-tools
+  install_module_packages openvpn-helper
 fi
 
 mkdir -p "$BIN_DIR"

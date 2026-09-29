@@ -1,8 +1,10 @@
 # Linux Dev Template
 
-`linux-dev-template` provides a development environment for Ubuntu running in:
+`linux-dev-template` provides a development environment for:
 
-- Windows 11 + WSL 2
+- Fedora Workstation (including an existing niri/DMS session)
+- Fedora Server
+- Windows 11 + WSL 2 Ubuntu
 - macOS + OrbStack Ubuntu machines
 
 This repository provides:
@@ -14,15 +16,16 @@ This repository provides:
 
 ## Design goals
 
-1. Keep the **Ubuntu userland** as similar as possible across WSL and OrbStack.
-2. Keep **host-specific integration** outside Ubuntu where possible.
+1. Keep development tools and user configuration consistent across Fedora and Ubuntu guests.
+2. Keep distribution package names in shared helpers and host integration in dedicated modules.
 3. Prefer **simple, official installation paths** over clever but brittle ones.
 4. Make scripts **idempotent** and easy to read/modify.
 
 ## High-level choices
 
 - Shell: zsh + Oh My Zsh + Powerlevel10k
-- Terminal host font: JetBrainsMono Nerd Font
+- Font: JetBrainsMono Nerd Font on native Fedora or the Windows/macOS terminal host
+- Desktop clipboard: wl-clipboard on native Fedora
 - Terminal workspaces: tmux + Zellij + Herdr
 - Terminal file manager: Yazi (latest stable release)
 - Python: system python + venv + pipx + uv
@@ -33,13 +36,20 @@ This repository provides:
 
 ## Installation profiles
 
-The bootstrapper reads `/etc/os-release` and detects WSL or OrbStack. Only
-Ubuntu in these two environments is currently accepted. Fedora support is
-planned for a subsequent change; an unsupported host is detected and rejected
-before any installation, including during a dry run.
+The bootstrapper reads `/etc/os-release` and detects native Linux, WSL, or
+OrbStack. Fedora installations managed by DNF and Ubuntu in WSL/OrbStack are
+accepted. Fedora Atomic installations managed by rpm-ostree are outside this
+installer's scope.
 
-The default `cli` profile installs the shared terminal development tools.
-PostgreSQL and nginx are opt-in. The login shell changes only when
+| Environment | Default profile | Package manager |
+|---|---|---|
+| Fedora Workstation | `desktop` | DNF |
+| Fedora Server or Fedora without an edition identifier | `cli` | DNF |
+| WSL / OrbStack Ubuntu | `cli` | APT |
+
+The `cli` profile installs shared terminal development tools. `desktop` adds
+the local Nerd Font and Wayland clipboard commands. Both profiles keep
+PostgreSQL and nginx opt-in. The login shell changes only when
 `--set-default-shell` is provided.
 
 Run the detected default from the repository root:
@@ -52,20 +62,23 @@ Choose a profile or customize its modules:
 
 ```bash
 ./bootstrap.sh --profile cli
+./bootstrap.sh --profile desktop --skip nerd-font
 ./bootstrap.sh --with postgres,nginx
 ./bootstrap.sh --skip herdr
 ./bootstrap.sh --set-default-shell
 ```
 
-Available modules are `base`, `shell`, `tmux`, `zellij`, `herdr`,
+Available modules are `base`, `shell`, `nerd-font`, `clipboard`, `tmux`, `zellij`, `herdr`,
 `yazi`, `direnv`, `python`, `node`, `db-clients`, `postgres`, `nginx`,
 and `devtools`.
 
-The previous `server` and `desktop` profiles have been removed. Use `cli` and
-select optional services with `--with postgres,nginx`.
+The previous `server` profile has been replaced by `cli` with optional services
+selected through `--with postgres,nginx`. The `desktop` profile now targets
+native Fedora; selecting font or clipboard modules in an Ubuntu guest is
+rejected because those settings belong on its terminal host.
 
-Preview environment detection, module selection, script order, and the final
-verification command without changing the system:
+Preview environment detection, package manager, module packages, script order,
+and the final verification command without changing the system:
 
 ```bash
 ./bootstrap.sh --dry-run
@@ -91,6 +104,8 @@ On WSL without systemd, the first run writes `/etc/wsl.conf` and stops. Run
 Then run the modules you want. Every module remains a separate install script:
 
 ```text
+scripts/common/12-nerd-font.sh             # native Fedora only
+scripts/common/13-clipboard.sh             # native Fedora only
 scripts/common/15-tmux.sh
 scripts/common/16-zellij.sh
 scripts/common/17-herdr.sh
@@ -128,15 +143,19 @@ replace `~/.zshrc` with the project template by running:
 ./scripts/common/10-shell.sh --install-zshrc-template
 ```
 
-Install and select `JetBrainsMono Nerd Font` in the terminal on Windows or
-macOS, then fully reopen the terminal. The standalone font installer and check
-are retained for future desktop support and are not part of the `cli` profile.
+On native Fedora, the `desktop` profile installs `JetBrainsMono Nerd Font`
+into `~/.local/share/fonts`. Select that family in your terminal and reopen it.
+On WSL/OrbStack, install and select the font on Windows or macOS.
+
+The clipboard module installs `wl-copy` and `wl-paste` for Wayland terminal
+tools. Existing niri/DMS packages, session services, shortcuts, portals, and
+desktop configuration are managed outside this project.
 
 For an existing OpenVPN 3 Linux installation, the optional helper provides
 `vpn-up`, `vpn-down`, `vpn-status`, and `vpn-restart`. Run `vpn setup` once;
 credentials are stored in a Secret Service keyring and are never written to
 the repository or a plaintext credentials file. The helper requires an
-available, unlocked keyring in the guest session; see [OpenVPN helper notes](docs/openvpn-linux.md).
+available, unlocked keyring in the user session; see [OpenVPN helper notes](docs/openvpn-linux.md).
 
 The proxy helper is not an installer. Evaluate its output in the current shell:
 
@@ -147,10 +166,15 @@ eval "$(python3 scripts/common/99-proxy-switch.py off)"
 
 ## Important notes
 
-- **Fonts are installed on the terminal host OS**, not inside WSL or an
-  OrbStack guest.
+- Fedora uses its normal DNF repositories and distribution package versions;
+  the installer does not restrict `VERSION_ID` to one Fedora release.
+- Fedora database clients include `valkey-cli` for Redis-compatible use. The
+  Valkey package also contains a server; this module does not enable or start it.
+- **Fonts are installed on native Fedora or the terminal host OS**, not inside
+  WSL or an OrbStack guest.
 - On WSL, keep active projects under the Linux filesystem, e.g. `~/workspace`, not primarily under `/mnt/c/...`.
 - On OrbStack, keep Ubuntu-side paths and shell workflows aligned with WSL.
+- See [Fedora notes](docs/fedora-notes.md) for local services and validation status.
 
 ## Reference docs
 
@@ -164,6 +188,7 @@ These scripts follow the official docs as closely as practical:
 - uv installation: https://docs.astral.sh/uv/getting-started/installation/
 - pre-commit: https://pre-commit.com/
 - PostgreSQL on Ubuntu: https://www.postgresql.org/download/linux/ubuntu/
+- PostgreSQL on Fedora: https://www.postgresql.org/download/linux/redhat/
 - Node.js download page (nvm guidance): https://nodejs.org/en/download
 - Zellij installation: https://zellij.dev/documentation/installation.html
 - Herdr installation: https://herdr.dev/docs/install/
@@ -171,9 +196,11 @@ These scripts follow the official docs as closely as practical:
 
 ## Development checks
 
-Run the environment and execution-plan tests without installing packages.
-They simulate WSL and OrbStack, so they can also run on the current Fedora host:
+Run the execution-plan and adapter tests without installing packages or
+starting services. These simulate Fedora editions and Ubuntu guests:
 
 ```bash
 ./tests/test-bootstrap.sh
+./tests/test-packages.sh
+./tests/test-postgres.sh
 ```

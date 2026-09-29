@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 CONFIG_SOURCE="${REPO_ROOT}/dotfiles/.config/yazi"
 CONFIG_TARGET="${HOME}/.config/yazi"
 INSTALL_DIR="${HOME}/.local/bin"
@@ -22,8 +24,7 @@ release_asset() {
 
 install_prerequisites() {
   log "installing preview and navigation helpers..."
-  sudo apt update
-  sudo apt install -y fd-find ripgrep fzf zoxide file jq p7zip-full poppler-utils mediainfo
+  install_module_packages yazi
 }
 
 install_yazi() (
@@ -77,7 +78,6 @@ install_config() {
 
 main() {
   require_command sudo
-  require_command apt
   require_command curl
   require_command jq
   require_command unzip

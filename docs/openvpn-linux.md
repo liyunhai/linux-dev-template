@@ -9,14 +9,15 @@
 
 ## 安装
 
-在受支持的 Ubuntu 客户机中执行：
+在原生 Fedora 或受支持的 Ubuntu 客户机中执行：
 
 ```bash
 ./scripts/common/19-openvpn-helper.sh
 ```
 
-安装器检查已有的 OpenVPN 3，必要时安装提供 `secret-tool` 的
-`libsecret-tools`，然后将 `vpn` 和快捷入口安装到 `~/.local/bin`。
+安装器检查已有的 OpenVPN 3，必要时安装提供 `secret-tool` 的系统软件包
+（Fedora 为 `libsecret`，Ubuntu 为 `libsecret-tools`），然后将 `vpn` 和
+快捷入口安装到 `~/.local/bin`。
 
 ## 配置与凭据
 

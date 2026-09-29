@@ -15,10 +15,13 @@
 # =============================================================================
 set -Eeuo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
+
 main() {
   echo "[50-db-clients] installing database clients..."
-  sudo apt update
-  sudo apt install -y sqlite3 postgresql-client mysql-client redis-tools
+  install_module_packages db-clients
 
   echo "[50-db-clients] done."
 }

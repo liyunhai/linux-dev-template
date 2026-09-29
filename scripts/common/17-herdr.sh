@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 CONFIG_SOURCE="${REPO_ROOT}/dotfiles/.config/herdr/config.toml"
 CONFIG_TARGET="${HOME}/.config/herdr/config.toml"
 INSTALL_DIR="${HOME}/.local/bin"
@@ -50,6 +52,7 @@ install_config() {
 }
 
 main() {
+  require_supported_environment
   require_command curl
   require_command jq
   require_command sha256sum

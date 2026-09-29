@@ -6,8 +6,8 @@
 #   Install the baseline packages that almost every later layer depends on.
 #
 # Why this exists:
-#   This script creates a sane Ubuntu 24.04 base for both WSL and OrbStack
-#   machines. It intentionally avoids anything host-specific.
+#   This script installs a shared development foundation on Fedora and on
+#   Ubuntu in WSL or OrbStack, using distribution-specific package names.
 #
 # Official references:
 #   - Git on Linux: https://git-scm.com/install/linux
@@ -20,35 +20,13 @@
 # =============================================================================
 set -Eeuo pipefail
 
-PACKAGES=(
-  build-essential
-  ca-certificates
-  curl
-  wget
-  gnupg
-  software-properties-common
-  unzip
-  zip
-  jq
-  tree
-  ripgrep
-  fd-find
-  fzf
-  tmux
-  htop
-  git
-  openssh-client
-  make
-  pkg-config
-  sqlite3
-)
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 
 main() {
-  echo "[00-base] updating apt metadata..."
-  sudo apt update
-
   echo "[00-base] installing base packages..."
-  sudo apt install -y "${PACKAGES[@]}"
+  install_module_packages base
 
   echo "[00-base] ensuring workspace layout exists..."
   mkdir -p "$HOME/workspace"/{apps,libs,infra,playground}

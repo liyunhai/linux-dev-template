@@ -7,7 +7,7 @@
 #
 # Why this exists:
 #   We want the interactive shell experience to be nearly identical between
-#   WSL Ubuntu and OrbStack Ubuntu.
+#   Fedora, WSL Ubuntu, and OrbStack Ubuntu.
 #
 # Official references:
 #   - Oh My Zsh: https://ohmyz.sh/
@@ -21,6 +21,8 @@
 set -Eeuo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 ZSH_CUSTOM_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 CHANGE_DEFAULT_SHELL="${CHANGE_DEFAULT_SHELL:-false}"
 INSTALL_ZSHRC_TEMPLATE=false
@@ -70,8 +72,7 @@ main() {
   [[ ! -f "$HOME/.zshrc" ]] || zshrc_existed_before_install=true
 
   echo "[10-shell] installing zsh and shell helpers..."
-  sudo apt update
-  sudo apt install -y zsh git curl fzf
+  install_module_packages shell
 
   if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
     echo "[10-shell] installing Oh My Zsh..."
@@ -121,7 +122,8 @@ main() {
   cat <<MSG
 [10-shell] done.
 [10-shell] next steps:
-  1. Install a Nerd Font on the terminal host OS for WSL/OrbStack.
+  1. Select JetBrainsMono Nerd Font in the Fedora terminal, or install and select
+     a Nerd Font on the Windows/macOS terminal host for WSL/OrbStack.
   2. Start zsh manually, or rerun bootstrap with --set-default-shell.
   3. Optionally run: p10k configure
 MSG

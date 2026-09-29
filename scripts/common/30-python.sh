@@ -5,7 +5,7 @@
 # Purpose:
 #   Install the Python development toolchain:
 #   - system python
-#   - python3-venv
+#   - venv (a separate package on Ubuntu)
 #   - python3-pip
 #   - pipx
 #   - uv
@@ -23,14 +23,15 @@
 set -Eeuo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 
 # shellcheck source=../lib/config.sh
 source "${REPO_ROOT}/scripts/lib/config.sh"
 
 main() {
-  echo "[30-python] installing python packages from apt..."
-  sudo apt update
-  sudo apt install -y python3 python3-venv python3-pip pipx
+  echo "[30-python] installing Python system packages..."
+  install_module_packages python
 
   echo "[30-python] ensuring pip config exists..."
   install_config_file \

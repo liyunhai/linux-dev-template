@@ -13,7 +13,7 @@ set -euo pipefail
 # 设计原则：
 #   - 尽量幂等：重复执行不会反复破坏环境
 #   - 尽量保守：已有配置优先备份，不直接硬覆盖
-#   - WSL / OrbStack Ubuntu 都能使用
+#   - Fedora / WSL / OrbStack Ubuntu 都能使用
 #
 # 参考：
 #   - TPM 官方建议通过 git clone 安装到 ~/.tmux/plugins/tpm
@@ -26,6 +26,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #   scripts/common/15-tmux.sh
 #   dotfiles/.tmux.conf
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 
 TEMPLATE_TMUX_CONF="${REPO_ROOT}/dotfiles/.tmux.conf"
 TARGET_TMUX_CONF="${HOME}/.tmux.conf"
@@ -61,14 +63,13 @@ backup_file_if_exists() {
 
 install_tmux_packages() {
   log "installing tmux prerequisites..."
-  sudo apt update
-  sudo apt install -y tmux git xclip xsel
+  install_module_packages tmux
 
   # 说明：
   # - tmux: 主程序
   # - git: 安装 TPM 和插件时需要
-  # - xclip / xsel: 某些 Linux 桌面或远程环境下有助于剪贴板集成
-  #   在 WSL 中未必直接用得上，但装上通常无害
+  # - Ubuntu 客户机保留 xclip / xsel 依赖
+  # - Fedora desktop 配置通过 clipboard 模块提供 wl-copy / wl-paste
 }
 
 install_tpm() {
@@ -120,14 +121,13 @@ Next steps:
        tmux -V
 
 If plugin installation fails due to network/proxy issues:
-  - verify GitHub access from this Ubuntu instance
+  - verify GitHub access from this Linux environment
   - verify git/curl proxy settings
 EON
 }
 
 main() {
   require_command sudo
-  require_command apt
 
   install_tmux_packages
   install_tpm

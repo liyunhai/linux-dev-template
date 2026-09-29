@@ -8,7 +8,9 @@ Preview detection without changing the system:
 ./bootstrap.sh --dry-run
 ```
 
-Supported hosts report Ubuntu, platform `wsl` or `orbstack`, and profile `cli`.
+Ubuntu guests report platform `wsl` or `orbstack` and profile `cli`.
+Fedora reports `native`; Workstation defaults to `desktop`, Server to `cli`.
+The output also lists the package manager and per-module package plan.
 Preview optional services with:
 
 ```bash
@@ -31,11 +33,12 @@ If not:
 
 ## Unsupported environment or old profile
 
-Only Ubuntu in WSL 2 or OrbStack is currently accepted. An unsupported host,
-including Fedora until its adaptation is complete, exits before installing
-anything. `--dry-run` reports the detected OS/platform and the support error.
+Native Fedora installations using DNF and Ubuntu in WSL/OrbStack are accepted.
+Other hosts, including Fedora Atomic systems, exit before installing anything.
+`--dry-run` reports the detected OS/platform and the support error.
 
-Use `--profile cli` instead of the removed `server` or `desktop` profiles.
+Use `--profile cli` instead of the removed `server` profile. `desktop` is for
+native Fedora; select `cli` inside WSL/OrbStack.
 Add local services explicitly with `--with postgres,nginx`.
 
 ## nvm not found after install
@@ -58,10 +61,27 @@ Ensure `~/.local/bin` is on PATH.
 
 ## Yazi icons are missing or terminal text is widely spaced
 
-Install or repair the font on the Windows or macOS terminal host. In the
+On native Fedora, repair the local font with
+`./scripts/common/12-nerd-font.sh --force`. For WSL/OrbStack, install or repair
+the font on the Windows or macOS terminal host. In the
 terminal profile, select `JetBrainsMono Nerd Font` and fully close and reopen
 the terminal. Installing a font inside the guest will not update the host
 terminal font.
+
+## Wayland clipboard tools are missing
+
+On native Fedora, use `./scripts/common/13-clipboard.sh` or enable the
+`clipboard` module. `wl-copy` and `wl-paste` require a Wayland session to use
+the desktop clipboard. Installation checks only their presence and does not
+replace the clipboard contents or change compositor settings.
+
+## Fedora PostgreSQL initialization fails
+
+The optional PostgreSQL module initializes a new data directory using the
+distribution's `postgresql-setup` command. An existing `PG_VERSION` skips
+initialization. A nonempty directory without it is rejected for manual
+inspection. The data path is read from `postgresql.service`; inspect customized
+service settings if the installer cannot determine it.
 
 ## OpenVPN helper credentials need to be changed
 

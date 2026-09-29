@@ -23,11 +23,18 @@ assert_not_contains() {
 }
 
 write_fixtures() {
-  local os_id tool
+  local os_id tool variant version
   mkdir -p "${TMP_DIR}/bin" "${TMP_DIR}/home"
-  for os_id in ubuntu linuxmint fedora; do
+  for os_id in ubuntu linuxmint fedora debian; do
     printf 'ID=%s\nPRETTY_NAME="Test %s"\n' "$os_id" "$os_id" \
       >"${TMP_DIR}/${os_id}-os-release"
+  done
+  for variant in workstation server; do
+    for version in 43 44 45; do
+      printf 'ID=fedora\nPRETTY_NAME="Test Fedora %s %s"\nVARIANT_ID=%s\nVERSION_ID=%s\n' \
+        "$version" "$variant" "$variant" "$version" \
+        >"${TMP_DIR}/fedora-${variant}-${version}-os-release"
+    done
   done
 
   # A dry run must never call installation, service, or download commands.
@@ -74,6 +81,8 @@ test_supported_plans() {
     assert_contains "$plan" 'detected OS: Test ubuntu'
     assert_contains "$plan" "detected platform: $platform"
     assert_contains "$plan" 'install profile: cli'
+    assert_contains "$plan" 'package manager: apt'
+    assert_contains "$plan" 'packages (apt):'
     assert_not_contains "$plan" 'scripts/common/60-postgres.sh'
     assert_not_contains "$plan" 'scripts/common/70-nginx.sh'
     assert_not_contains "$plan" 'scripts/common/12-nerd-font.sh'
@@ -97,6 +106,48 @@ test_supported_plans() {
   done
 }
 
+test_fedora_profiles() {
+  local variant version plan relative_script
+  for variant in workstation server; do
+    for version in 43 44 45; do
+      plan="$(run_bootstrap native "fedora-${variant}-${version}" --dry-run)"
+      assert_contains "$plan" 'detected platform: native'
+      assert_contains "$plan" 'package manager: dnf'
+      assert_contains "$plan" 'packages (dnf):'
+      assert_not_contains "$plan" 'packages (apt):'
+      assert_not_contains "$plan" 'scripts/wsl/'
+      assert_not_contains "$plan" 'scripts/orbstack/'
+      assert_not_contains "$plan" 'scripts/common/60-postgres.sh'
+      assert_not_contains "$plan" 'scripts/common/70-nginx.sh'
+      if [[ "$variant" == workstation ]]; then
+        assert_contains "$plan" 'install profile: desktop'
+        assert_contains "$plan" 'scripts/common/12-nerd-font.sh'
+        assert_contains "$plan" 'scripts/common/13-clipboard.sh'
+      else
+        assert_contains "$plan" 'install profile: cli'
+        assert_not_contains "$plan" 'scripts/common/12-nerd-font.sh'
+        assert_not_contains "$plan" 'scripts/common/13-clipboard.sh'
+      fi
+      while IFS= read -r relative_script; do
+        [[ -f "${REPO_ROOT}/${relative_script}" ]] || fail "missing planned script: $relative_script"
+      done < <(awk '/^  scripts\// { print $1 }' <<<"$plan")
+    done
+  done
+  plan="$(run_bootstrap native fedora-workstation-44 --dry-run --profile cli --with postgres,nginx)"
+  assert_not_contains "$plan" 'scripts/common/12-nerd-font.sh'
+  assert_contains "$plan" 'scripts/common/60-postgres.sh'
+  assert_contains "$plan" 'initialize only a new data directory'
+  assert_contains "$plan" 'scripts/common/70-nginx.sh'
+  plan="$(run_bootstrap native fedora-server-44 --dry-run --profile desktop)"
+  assert_contains "$plan" 'scripts/common/13-clipboard.sh'
+  plan="$(run_bootstrap native fedora-workstation-44 --dry-run --skip nerd-font,clipboard)"
+  assert_not_contains "$plan" 'scripts/common/12-nerd-font.sh'
+  assert_not_contains "$plan" 'scripts/common/13-clipboard.sh'
+  # A minimal Fedora os-release without an edition uses the conservative profile.
+  plan="$(run_bootstrap native fedora --dry-run)"
+  assert_contains "$plan" 'install profile: cli'
+}
+
 test_module_overrides() {
   local plan
   plan="$(run_bootstrap wsl ubuntu --dry-run --profile cli \
@@ -111,20 +162,26 @@ test_module_overrides() {
 test_unsupported_environments() {
   local platform os_id
   for platform in native wsl orbstack; do
-    for os_id in linuxmint fedora; do
-      assert_rejected 'Ubuntu in WSL 2 or OrbStack is required' \
+    for os_id in linuxmint debian; do
+      assert_rejected 'Fedora with dnf, or Ubuntu in WSL 2 or OrbStack, is required' \
         "$platform" "$os_id" --dry-run
     done
   done
-  assert_rejected 'Ubuntu in WSL 2 or OrbStack is required' native ubuntu --dry-run
+  assert_rejected 'Fedora with dnf, or Ubuntu in WSL 2 or OrbStack, is required' native ubuntu --dry-run
+  for platform in wsl orbstack; do
+    assert_rejected 'Fedora with dnf, or Ubuntu in WSL 2 or OrbStack, is required' "$platform" fedora --dry-run
+    assert_rejected 'modules require a native Fedora host' "$platform" ubuntu --dry-run --profile desktop
+    assert_rejected 'modules require a native Fedora host' "$platform" ubuntu --dry-run --with clipboard
+    assert_rejected 'modules require a native Fedora host' "$platform" ubuntu --dry-run --with nerd-font
+  done
 }
 
 test_invalid_arguments() {
   local profile module option
-  for profile in server desktop unknown; do
-    assert_rejected 'profile must be cli' wsl ubuntu --dry-run --profile "$profile"
+  for profile in server unknown; do
+    assert_rejected 'profile must be cli or desktop' wsl ubuntu --dry-run --profile "$profile"
   done
-  for module in docker nerd-font unknown; do
+  for module in docker unknown; do
     assert_rejected "unknown module: $module" wsl ubuntu --dry-run --with "$module"
     assert_rejected "unknown module: $module" orbstack ubuntu --dry-run --skip "$module"
   done
@@ -159,6 +216,7 @@ test_read_only_behavior() {
 main() {
   write_fixtures
   test_supported_plans
+  test_fedora_profiles
   test_module_overrides
   test_unsupported_environments
   test_invalid_arguments

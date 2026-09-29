@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
+
 FONT_FAMILY="JetBrainsMono Nerd Font"
 FONT_DIR="${HOME}/.local/share/fonts/JetBrainsMono-NF"
 RELEASE_API="https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest"
@@ -49,8 +53,7 @@ fonts_are_installed() {
 install_fontconfig() {
   if ! command -v fc-cache >/dev/null 2>&1 || ! command -v fc-match >/dev/null 2>&1; then
     log "installing fontconfig..."
-    sudo apt update
-    sudo apt install -y fontconfig
+    install_module_packages nerd-font
   fi
 }
 
@@ -92,6 +95,8 @@ verify_font() {
 
 main() {
   parse_args "$@"
+  require_supported_environment
+  [[ "$OS_ID" == fedora && "$(detect_platform)" == native ]] || die "install fonts on the terminal host for WSL/OrbStack"
   require_command curl
   require_command jq
   require_command unzip

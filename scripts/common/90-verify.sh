@@ -53,6 +53,7 @@ main() {
 
   run_module_check shell verify-shell.sh
   run_module_check nerd-font verify-nerd-font.sh
+  run_module_check clipboard verify-clipboard.sh
   run_module_check tmux verify-tmux.sh
   run_module_check zellij verify-zellij.sh
   run_module_check herdr verify-herdr.sh

@@ -16,14 +16,15 @@
 set -Eeuo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 
 # shellcheck source=../lib/config.sh
 source "${REPO_ROOT}/scripts/lib/config.sh"
 
 main() {
   echo "[20-direnv] installing direnv..."
-  sudo apt update
-  sudo apt install -y direnv
+  install_module_packages direnv
 
   echo "[20-direnv] installing config..."
   install_config_file \

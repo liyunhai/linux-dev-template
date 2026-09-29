@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 CONFIG_SOURCE="${REPO_ROOT}/dotfiles/.config/zellij/config.kdl"
 CONFIG_TARGET="${HOME}/.config/zellij/config.kdl"
 INSTALL_DIR="${HOME}/.local/bin"
@@ -53,6 +55,7 @@ install_config() {
 }
 
 main() {
+  require_supported_environment
   require_command curl
   require_command tar
   require_command sha256sum

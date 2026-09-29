@@ -15,10 +15,13 @@
 # =============================================================================
 set -Eeuo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
+
 main() {
   echo "[80-devtools] installing CLI quality tools..."
-  sudo apt update
-  sudo apt install -y shellcheck yamllint shfmt gh
+  install_module_packages devtools
 
   export PATH="$HOME/.local/bin:$PATH"
   if command -v pipx >/dev/null 2>&1; then

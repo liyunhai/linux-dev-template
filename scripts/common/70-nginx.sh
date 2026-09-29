@@ -16,15 +16,14 @@
 set -Eeuo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-# shellcheck source=../lib/os.sh
-source "${REPO_ROOT}/scripts/lib/os.sh"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
 # shellcheck source=../lib/config.sh
 source "${REPO_ROOT}/scripts/lib/config.sh"
 
 main() {
   echo "[70-nginx] installing nginx..."
-  sudo apt update
-  sudo apt install -y nginx
+  install_module_packages nginx
 
   echo "[70-nginx] installing project nginx templates under ~/workspace/infra/nginx-templates..."
   local template
@@ -32,13 +31,18 @@ main() {
     install_config_file "$template" "$HOME/workspace/infra/nginx-templates/$(basename "$template")"
   done
 
-  if systemd_is_active; then
-    sudo systemctl enable nginx || true
-    sudo systemctl start nginx || true
-  fi
-
   echo "[70-nginx] validating nginx config..."
   sudo nginx -t
+
+  if systemd_is_active; then
+    sudo systemctl enable --now nginx
+  fi
+
+  if [[ "$OS_ID" == fedora ]]; then
+    echo "[70-nginx] optional site configs belong in /etc/nginx/conf.d/*.conf"
+  else
+    echo "[70-nginx] optional site configs use /etc/nginx/sites-available and sites-enabled"
+  fi
 
   echo "[70-nginx] done."
 }

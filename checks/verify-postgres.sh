@@ -11,8 +11,8 @@ psql --version
 
 if systemd_is_active; then
   echo "[verify-postgres] checking PostgreSQL service status..."
-  sudo systemctl is-enabled postgresql >/dev/null 2>&1 || true
-  sudo systemctl is-active postgresql >/dev/null 2>&1 || true
+  sudo systemctl is-enabled postgresql >/dev/null
+  sudo systemctl is-active postgresql >/dev/null
 fi
 
 echo "[verify-postgres] ok"

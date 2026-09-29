@@ -18,6 +18,10 @@
 # =============================================================================
 set -Eeuo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/packages.sh
+source "${REPO_ROOT}/scripts/lib/packages.sh"
+
 NVM_VERSION="v0.40.3"
 export NVM_DIR="$HOME/.nvm"
 
@@ -28,8 +32,7 @@ load_nvm() {
 
 main() {
   echo "[40-node] installing prerequisites..."
-  sudo apt update
-  sudo apt install -y curl ca-certificates
+  install_module_packages node
 
   if [[ ! -d "$NVM_DIR" ]]; then
     echo "[40-node] installing nvm..."

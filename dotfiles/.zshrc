@@ -1,11 +1,11 @@
 # ~/.zshrc
 #
-# Shared zsh configuration for WSL and OrbStack Ubuntu development machines.
+# Shared zsh configuration for Fedora and WSL/OrbStack Ubuntu development machines.
 #
 # Design goals:
 # - readable and easy to modify
 # - minimize platform-specific branches
-# - keep host-only settings (fonts, terminal colors) out of Ubuntu
+# - keep terminal host settings out of WSL/OrbStack guests
 
 export ZSH="$HOME/.oh-my-zsh"
 
