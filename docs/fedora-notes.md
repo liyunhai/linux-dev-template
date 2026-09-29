@@ -72,18 +72,18 @@ No terminal package, DMS theme, or compositor configuration is installed.
 - Ubuntu WSL/OrbStack: execution plans and APT dispatch tested with mocks.
 - PostgreSQL initialization: new, existing, and incomplete data directories
   tested using temporary directories and mocked service/setup commands.
-- Manual Fedora 44 validation: base and shell installation, shell check, Nerd
-  Font installation/check, and terminal font/display settings passed. During
-  base installation, DNF downgraded C++ runtime and fcitx5 packages; these were
-  restored through an explicit official-repository upgrade, followed by a
-  successful local dependency check. Repository metadata checksum errors and
-  timeouts still need separate investigation.
-- Alacritty/Ghostty configuration modules and Wayland clipboard round-trip
-  were confirmed manually.
-- tmux package/TPM/configuration installation and interactive plugin installation
-  passed manually. The revised `15-tmux.sh` now owns package installation and
-  automatic plugin downloads; that revised workflow still needs manual execution.
+- Manual Fedora 44 validation: every default desktop module installed, including
+  Node.js/npm/pnpm, database clients, and development tools. Alacritty/Ghostty
+  configuration and Wayland clipboard round-trip passed. The complete selected
+  module check finished with `[90-verify] all checks passed`.
+- The revised `15-tmux.sh` dry run and automatic plugin workflow both passed
+  manual validation. TPM and the configuration were retained on a rerun, and
+  all declared plugins were found installed.
+- Fedora's `shfmt` package formats shell input correctly, although
+  `shfmt --version` prints no text on this machine.
+- During the original base installation, DNF downgraded C++ runtime and fcitx5
+  packages; an explicit upgrade from Fedora's official repositories restored
+  them, and `dnf check --dependencies` found no issues afterward.
 
-Installation of the remaining modules, service startup, graphical clipboard use, and
-Ubuntu guest installation remain to be validated on the target systems before
-merging this branch.
+The permanent zsh login-shell change, optional PostgreSQL/nginx service modules,
+and Ubuntu guest installation remain to be validated before merging this branch.

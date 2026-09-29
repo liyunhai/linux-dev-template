@@ -24,7 +24,6 @@ plugins=(
   pip
   node
   npm
-  direnv
   colored-man-pages
   command-not-found
 )

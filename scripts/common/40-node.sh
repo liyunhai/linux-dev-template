@@ -31,8 +31,15 @@ load_nvm() {
 }
 
 main() {
-  echo "[40-node] installing prerequisites..."
+  local command_name
+  echo "[40-node] checking base prerequisites..."
   install_module_packages node
+  for command_name in curl git; do
+    command -v "$command_name" >/dev/null 2>&1 || {
+      printf '[40-node] ERROR: %s is required; run 00-base.sh first\n' "$command_name" >&2
+      return 1
+    }
+  done
 
   if [[ ! -d "$NVM_DIR" ]]; then
     echo "[40-node] installing nvm..."

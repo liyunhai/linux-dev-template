@@ -45,12 +45,13 @@ clone_or_update() {
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/common/10-shell.sh [--install-zshrc-template]
+Usage: ./scripts/common/10-shell.sh [--install-zshrc-template] [--set-default-shell]
 
 Options:
   --install-zshrc-template  Back up and replace an existing ~/.zshrc with the
                             project template. Without this option, an existing
                             user configuration is preserved.
+  --set-default-shell       Change this user's login shell to zsh with chsh.
   -h, --help                Show this help.
 EOF
 }
@@ -59,6 +60,7 @@ parse_args() {
   while (($#)); do
     case "$1" in
       --install-zshrc-template) INSTALL_ZSHRC_TEMPLATE=true ;;
+      --set-default-shell) CHANGE_DEFAULT_SHELL=true ;;
       -h|--help) usage; exit 0 ;;
       *) printf '[10-shell] ERROR: unknown option: %s\n' "$1" >&2; exit 1 ;;
     esac
@@ -68,8 +70,15 @@ parse_args() {
 
 main() {
   parse_args "$@"
-  local zshrc_existed_before_install=false
+  local zshrc_existed_before_install=false command_name
   [[ ! -f "$HOME/.zshrc" ]] || zshrc_existed_before_install=true
+
+  for command_name in git curl fzf; do
+    command -v "$command_name" >/dev/null 2>&1 || {
+      printf '[10-shell] ERROR: %s is required; run 00-base.sh first\n' "$command_name" >&2
+      exit 1
+    }
+  done
 
   echo "[10-shell] installing zsh and shell helpers..."
   install_module_packages shell
@@ -114,6 +123,10 @@ main() {
   if "$CHANGE_DEFAULT_SHELL" \
     && [[ "$(getent passwd "$USER" | cut -d: -f7)" != "$(command -v zsh)" ]]; then
     echo "[10-shell] changing default shell to zsh..."
+    command -v chsh >/dev/null 2>&1 || {
+      printf '[10-shell] ERROR: chsh is required to change the login shell\n' >&2
+      exit 1
+    }
     chsh -s "$(command -v zsh)"
   elif ! "$CHANGE_DEFAULT_SHELL"; then
     echo "[10-shell] keeping the current login shell; use --set-default-shell to change it."
@@ -124,7 +137,8 @@ main() {
 [10-shell] next steps:
   1. Select JetBrainsMono Nerd Font in the Fedora terminal, or install and select
      a Nerd Font on the Windows/macOS terminal host for WSL/OrbStack.
-  2. Start zsh manually, or rerun bootstrap with --set-default-shell.
+  2. After changing the login shell, log out and back in to start zsh.
+     To change it later, run this script with --set-default-shell.
   3. Optionally run: p10k configure
 MSG
 }

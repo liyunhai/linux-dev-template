@@ -74,6 +74,9 @@ Available modules are `base`, `shell`, `nerd-font`, `clipboard`, `alacritty`, `g
 `yazi`, `direnv`, `python`, `node`, `db-clients`, `postgres`, `nginx`,
 and `devtools`.
 
+The exact packages and other installed items for each script are listed in
+[the installation inventory](docs/installation-inventory.md).
+
 The previous `server` profile has been replaced by `cli` with optional services
 selected through `--with postgres,nginx`. The `desktop` profile now targets
 native Fedora; selecting font, clipboard, or native terminal modules in an Ubuntu guest is
@@ -146,6 +149,14 @@ replace `~/.zshrc` with the project template by running:
 
 ```bash
 ./scripts/common/10-shell.sh --install-zshrc-template
+```
+
+To also make zsh the permanent login shell when running the individual shell
+installer, add `--set-default-shell`. This uses `chsh`; log out and back in for
+the new login shell to take effect:
+
+```bash
+./scripts/common/10-shell.sh --install-zshrc-template --set-default-shell
 ```
 
 ### tmux installation

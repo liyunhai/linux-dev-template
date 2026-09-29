@@ -22,21 +22,21 @@ packages_for_module() {
       packages=(ca-certificates "$curl_package" wget unzip zip jq tree ripgrep fd-find
         fzf htop git make tar)
       if [[ "$OS_ID" == fedora ]]; then
-        packages+=(gcc gcc-c++ glibc-devel gnupg2 openssh-clients pkgconf-pkg-config sqlite)
+        packages+=(gcc gcc-c++ glibc-devel gnupg2 openssh-clients pkgconf-pkg-config)
       else
-        packages+=(build-essential gnupg software-properties-common openssh-client pkg-config sqlite3)
+        packages+=(build-essential gnupg software-properties-common openssh-client pkg-config)
       fi
       ;;
-    shell) packages=(zsh git "$curl_package" fzf) ;;
+    shell) packages=(zsh) ;;
     nerd-font) packages=(fontconfig) ;;
     clipboard) packages=(wl-clipboard) ;;
     tmux)
       packages=(tmux)
       [[ "$OS_ID" != ubuntu ]] || packages+=(xclip xsel)
       ;;
-    alacritty|ghostty|zellij|herdr) ;;
+    alacritty|ghostty|zellij|herdr|node) ;;
     yazi)
-      packages=(fd-find ripgrep fzf zoxide file jq poppler-utils mediainfo)
+      packages=(zoxide file poppler-utils mediainfo)
       if [[ "$OS_ID" == fedora ]]; then packages+=(7zip); else packages+=(p7zip-full); fi
       ;;
     direnv) packages=(direnv) ;;
@@ -44,7 +44,6 @@ packages_for_module() {
       packages=(python3 python3-pip pipx)
       [[ "$OS_ID" != ubuntu ]] || packages+=(python3-venv)
       ;;
-    node) packages=("$curl_package" ca-certificates) ;;
     db-clients)
       if [[ "$OS_ID" == fedora ]]; then
         packages=(sqlite postgresql mysql valkey)
@@ -54,9 +53,9 @@ packages_for_module() {
       ;;
     postgres)
       if [[ "$OS_ID" == fedora ]]; then
-        packages=(postgresql-server postgresql)
+        packages=(postgresql-server)
       else
-        packages=(postgresql postgresql-client)
+        packages=(postgresql)
       fi
       ;;
     nginx) packages=(nginx) ;;
