@@ -17,6 +17,7 @@ Common tools used by everything else:
 - Powerlevel10k
 - JetBrainsMono Nerd Font on the terminal host OS
 - Wayland clipboard commands on native Fedora desktops
+- Optional Alacritty and Ghostty user configuration
 - zsh plugins
 - tmux
 - Zellij
@@ -68,6 +69,13 @@ The desktop profile adds local Nerd Fonts and Wayland clipboard commands.
 These modules are restricted to native Fedora. Fonts for WSL and OrbStack
 belong on the terminal host OS. niri/DMS installation and configuration are
 outside the project scope.
+
+The optional `alacritty` and `ghostty` modules install terminal templates using
+`scripts/lib/terminals.sh`. They require the terminal program and Nerd Font
+to be installed first, use the shared configuration backup helper, and respect
+`XDG_CONFIG_HOME`. They are restricted to native Fedora and install no packages.
+Dry runs show the source, destination, and prerequisites. Existing DMS color
+files are referenced through optional imports; the project does not manage them.
 
 Profiles only select shared modules. Distribution-specific scripts should be
 added only when behavior genuinely cannot be expressed by the helpers under

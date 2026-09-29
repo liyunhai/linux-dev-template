@@ -26,6 +26,7 @@ This repository provides:
 - Shell: zsh + Oh My Zsh + Powerlevel10k
 - Font: JetBrainsMono Nerd Font on native Fedora or the Windows/macOS terminal host
 - Desktop clipboard: wl-clipboard on native Fedora
+- Optional terminal configuration: Alacritty and Ghostty with 14 pt Nerd Font
 - Terminal workspaces: tmux + Zellij + Herdr
 - Terminal file manager: Yazi (latest stable release)
 - Python: system python + venv + pipx + uv
@@ -64,17 +65,18 @@ Choose a profile or customize its modules:
 ./bootstrap.sh --profile cli
 ./bootstrap.sh --profile desktop --skip nerd-font
 ./bootstrap.sh --with postgres,nginx
+./bootstrap.sh --with alacritty,ghostty --dry-run
 ./bootstrap.sh --skip herdr
 ./bootstrap.sh --set-default-shell
 ```
 
-Available modules are `base`, `shell`, `nerd-font`, `clipboard`, `tmux`, `zellij`, `herdr`,
+Available modules are `base`, `shell`, `nerd-font`, `clipboard`, `alacritty`, `ghostty`, `tmux`, `zellij`, `herdr`,
 `yazi`, `direnv`, `python`, `node`, `db-clients`, `postgres`, `nginx`,
 and `devtools`.
 
 The previous `server` profile has been replaced by `cli` with optional services
 selected through `--with postgres,nginx`. The `desktop` profile now targets
-native Fedora; selecting font or clipboard modules in an Ubuntu guest is
+native Fedora; selecting font, clipboard, or native terminal modules in an Ubuntu guest is
 rejected because those settings belong on its terminal host.
 
 Preview environment detection, package manager, module packages, script order,
@@ -106,6 +108,8 @@ Then run the modules you want. Every module remains a separate install script:
 ```text
 scripts/common/12-nerd-font.sh             # native Fedora only
 scripts/common/13-clipboard.sh             # native Fedora only
+scripts/common/14-alacritty.sh             # optional config for an installed terminal
+scripts/common/14-ghostty.sh               # optional config for an installed terminal
 scripts/common/15-tmux.sh
 scripts/common/16-zellij.sh
 scripts/common/17-herdr.sh
@@ -146,6 +150,36 @@ replace `~/.zshrc` with the project template by running:
 On native Fedora, the `desktop` profile installs `JetBrainsMono Nerd Font`
 into `~/.local/share/fonts`. Select that family in your terminal and reopen it.
 On WSL/OrbStack, install and select the font on Windows or macOS.
+
+### Alacritty and Ghostty configuration
+
+On native Fedora, the optional `alacritty` and `ghostty` modules configure
+terminal programs that are already installed. They require JetBrainsMono Nerd
+Font and are not selected by either default profile. Select one or both with
+`--with`, or apply an individual configuration after installing the font:
+
+```bash
+./scripts/common/14-alacritty.sh
+./scripts/common/14-ghostty.sh
+```
+
+Templates use 14 pt text, an extra 2 pixels of cell height, and 12 units of
+window padding (Alacritty pixels scaled by DPI; Ghostty points). They include
+a blinking block cursor and hide the mouse pointer while typing. Alacritty
+also provides explicit font styles, keyboard shortcuts, and 10,000 lines of
+scrollback. The formats follow the current
+[Alacritty TOML configuration](https://alacritty.org/config-alacritty.html) and
+[Ghostty configuration](https://ghostty.org/docs/config/reference).
+
+Configuration is installed under `${XDG_CONFIG_HOME:-$HOME/.config}`.
+Changed files are backed up as `<file>.bak.<timestamp>` before replacement;
+identical files are left in place. This installs the complete project template
+rather than merging individual settings. Fully reopen the terminal afterwards.
+
+Existing DMS colors are imported from `alacritty/dank-theme.toml` and
+`ghostty/themes/dankcolors`, relative to each terminal's configuration directory.
+These imports are optional; without the files, terminal defaults supply the
+colors. The modules do not create DMS themes or install desktop components.
 
 The clipboard module installs `wl-copy` and `wl-paste` for Wayland terminal
 tools. Existing niri/DMS packages, session services, shortcuts, portals, and

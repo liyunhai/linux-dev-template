@@ -75,6 +75,19 @@ On native Fedora, use `./scripts/common/13-clipboard.sh` or enable the
 the desktop clipboard. Installation checks only their presence and does not
 replace the clipboard contents or change compositor settings.
 
+## Alacritty or Ghostty configuration module stops before installation
+
+These optional modules configure existing terminal programs on native Fedora.
+Install the terminal separately, then run `12-nerd-font.sh` before selecting
+`14-alacritty.sh` or `14-ghostty.sh`. Existing configuration is backed up before
+replacement. Applying a template resets its font size to 14 pt; edit the target
+configuration afterwards for a different size.
+
+An optional DMS theme import uses the terminal's own configuration directory.
+Missing theme files fall back to terminal defaults. If a theme is present but
+invalid, inspect the external theme file or remove its import from the terminal
+configuration. Reopen the terminal to inspect the resulting appearance.
+
 ## Fedora PostgreSQL initialization fails
 
 The optional PostgreSQL module initializes a new data directory using the

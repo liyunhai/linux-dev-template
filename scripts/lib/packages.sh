@@ -34,7 +34,7 @@ packages_for_module() {
       packages=(tmux git)
       [[ "$OS_ID" != ubuntu ]] || packages+=(xclip xsel)
       ;;
-    zellij|herdr) ;;
+    alacritty|ghostty|zellij|herdr) ;;
     yazi)
       packages=(fd-find ripgrep fzf zoxide file jq poppler-utils mediainfo)
       if [[ "$OS_ID" == fedora ]]; then packages+=(7zip); else packages+=(p7zip-full); fi

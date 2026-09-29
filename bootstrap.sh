@@ -12,7 +12,7 @@ SKIP_MODULES=""
 CHANGE_DEFAULT_SHELL=false
 
 ALL_MODULES=(
-  base shell nerd-font clipboard tmux zellij herdr yazi direnv python node db-clients
+  base shell nerd-font clipboard alacritty ghostty tmux zellij herdr yazi direnv python node db-clients
   postgres nginx devtools
 )
 CLI_MODULES=(
@@ -30,7 +30,7 @@ Usage: ./bootstrap.sh [options]
 
 Installs a development environment on Fedora or Ubuntu in WSL 2 or OrbStack.
 Fedora Workstation defaults to desktop; Fedora Server and Ubuntu guests default
-to cli. PostgreSQL and nginx are optional modules.
+to cli. PostgreSQL, nginx, and native terminal configuration are optional modules.
 
 Options:
   --profile PROFILE       Use cli or desktop instead of auto-detection.
@@ -41,12 +41,16 @@ Options:
   -h, --help              Show this help.
 
 Modules:
-  base, shell, nerd-font, clipboard, tmux, zellij, herdr, yazi, direnv, python, node,
-  db-clients, postgres, nginx, devtools
+  base, shell, nerd-font, clipboard, alacritty, ghostty, tmux, zellij, herdr, yazi,
+  direnv, python, node, db-clients, postgres, nginx, devtools
+
+Alacritty and Ghostty modules configure existing terminal programs and require
+JetBrainsMono Nerd Font. They do not install terminal packages.
 
 Examples:
   ./bootstrap.sh --dry-run
   ./bootstrap.sh --with postgres,nginx --dry-run
+  ./bootstrap.sh --with alacritty,ghostty --dry-run
   ./bootstrap.sh --profile cli --skip herdr --set-default-shell
 EOF
 }
@@ -127,8 +131,8 @@ select_modules() {
   remove_csv_modules "$SKIP_MODULES" SELECTED_MODULES
 
   if [[ "$PLATFORM" != native ]] \
-    && [[ -n "${SELECTED_MODULES[nerd-font]:-}${SELECTED_MODULES[clipboard]:-}" ]]; then
-    die "nerd-font and clipboard modules require a native Fedora host; configure the terminal host for WSL/OrbStack"
+    && [[ -n "${SELECTED_MODULES[nerd-font]:-}${SELECTED_MODULES[clipboard]:-}${SELECTED_MODULES[alacritty]:-}${SELECTED_MODULES[ghostty]:-}" ]]; then
+    die "nerd-font, clipboard, alacritty, and ghostty modules require a native Fedora host; configure the terminal host for WSL/OrbStack"
   fi
 
   for module in "${ALL_MODULES[@]}"; do
@@ -149,6 +153,13 @@ run_selected_module() {
     fi
     if [[ "$module" == postgres && "$OS_ID" == fedora ]]; then
       log "PostgreSQL: initialize only a new data directory, then enable the service"
+    fi
+    if [[ "$module" == alacritty || "$module" == ghostty ]]; then
+      local filename=alacritty.toml
+      [[ "$module" != ghostty ]] || filename=config.ghostty
+      printf '    config: dotfiles/.config/%s/%s -> %s/%s/%s\n' \
+        "$module" "$filename" "${XDG_CONFIG_HOME:-$HOME/.config}" "$module" "$filename"
+      printf '    requires: existing %s and JetBrainsMono Nerd Font; changed config is backed up\n' "$module"
     fi
   fi
 }
@@ -217,6 +228,8 @@ main() {
   run_selected_module shell scripts/common/10-shell.sh
   run_selected_module nerd-font scripts/common/12-nerd-font.sh
   run_selected_module clipboard scripts/common/13-clipboard.sh
+  run_selected_module alacritty scripts/common/14-alacritty.sh
+  run_selected_module ghostty scripts/common/14-ghostty.sh
   run_selected_module tmux scripts/common/15-tmux.sh
   run_selected_module zellij scripts/common/16-zellij.sh
   run_selected_module herdr scripts/common/17-herdr.sh

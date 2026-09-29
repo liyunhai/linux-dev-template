@@ -50,6 +50,19 @@ The scripts use the distribution's default service configuration. Firewall
 rules and SELinux policy require configuration for the particular site or
 remote access being enabled.
 
+## Optional terminal configuration
+
+Use `--with alacritty,ghostty` to select user configuration for either or both
+already-installed terminals. These modules follow `nerd-font` in the execution
+order and require that font; Server users can select `--with nerd-font,alacritty`
+with the `cli` profile when configuring an installed graphical terminal.
+
+The templates use JetBrainsMono Nerd Font at 14 pt, roomier cell height and
+padding, a blinking block cursor, and mouse hiding during typing. Optional
+imports use existing DMS color files and tolerate their absence. Applying a
+template backs up a different existing configuration before replacing it.
+No terminal package, DMS theme, or compositor configuration is installed.
+
 ## Validation status
 
 - Fedora 44 Workstation: actual OS/profile detection and read-only dry runs;
@@ -59,7 +72,15 @@ remote access being enabled.
 - Ubuntu WSL/OrbStack: execution plans and APT dispatch tested with mocks.
 - PostgreSQL initialization: new, existing, and incomplete data directories
   tested using temporary directories and mocked service/setup commands.
+- Manual Fedora 44 validation: base and shell installation, shell check, Nerd
+  Font installation/check, and terminal font/display settings passed. During
+  base installation, DNF downgraded C++ runtime and fcitx5 packages; these were
+  restored through an explicit official-repository upgrade, followed by a
+  successful local dependency check. Repository metadata checksum errors and
+  timeouts still need separate investigation.
+- The Alacritty/Ghostty settings were confirmed manually before being added to
+  the repository. The new configuration modules still need manual execution.
 
-Full package installation, service startup, graphical clipboard use, and
+Installation of the remaining modules, service startup, graphical clipboard use, and
 Ubuntu guest installation remain to be validated on the target systems before
 merging this branch.
