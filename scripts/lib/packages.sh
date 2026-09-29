@@ -20,7 +20,7 @@ packages_for_module() {
   case "$module" in
     base)
       packages=(ca-certificates "$curl_package" wget unzip zip jq tree ripgrep fd-find
-        fzf tmux htop git make tar)
+        fzf htop git make tar)
       if [[ "$OS_ID" == fedora ]]; then
         packages+=(gcc gcc-c++ glibc-devel gnupg2 openssh-clients pkgconf-pkg-config sqlite)
       else
@@ -32,7 +32,7 @@ packages_for_module() {
     clipboard) packages=(wl-clipboard) ;;
     tmux)
       packages=(tmux git)
-      [[ "$OS_ID" != ubuntu ]] || packages+=(xclip xsel)
+      if [[ "$OS_ID" == fedora ]]; then packages+=(wl-clipboard); else packages+=(xclip xsel); fi
       ;;
     alacritty|ghostty|zellij|herdr) ;;
     yazi)

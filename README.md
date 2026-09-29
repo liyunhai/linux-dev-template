@@ -130,7 +130,8 @@ scripts/common/90-verify.sh
 The terminal tools can coexist. They are not configured to start or nest one
 another automatically:
 
-- tmux: established terminal multiplexer with TPM plugins
+- tmux: terminal multiplexer; its module installs the program, configuration,
+  TPM, and declared plugins automatically
 - Zellij: modern general-purpose terminal workspace
 - Herdr: terminal workspace focused on coding-agent workflows
 - Yazi: terminal file manager
@@ -146,6 +147,36 @@ replace `~/.zshrc` with the project template by running:
 ```bash
 ./scripts/common/10-shell.sh --install-zshrc-template
 ```
+
+### tmux installation
+
+`00-base.sh` does not install tmux, so `--skip tmux` also excludes its program
+installation. `15-tmux.sh` installs tmux, Git and clipboard
+dependencies (Fedora `wl-clipboard`; Ubuntu `xclip`/`xsel`), clones or updates
+TPM, backs up a different `~/.tmux.conf` before installing the project template,
+and automatically installs its declared plugins. Existing plugin repositories
+are retained; installing missing plugins does not update existing plugins.
+
+The plugins are TPM, tmux-sensible, tmux-yank, tmux-resurrect, tmux-continuum,
+and Catppuccin. TPM's official
+[command-line installer](https://github.com/tmux-plugins/tpm/blob/master/bin/install_plugins)
+is called using a temporary server and a separate socket. This server uses an
+empty configuration to avoid loading session restoration plugins. It is cleaned
+up after success or failure. A download failure stops installation; rerun the
+module after resolving connectivity.
+
+Preview the module directly without modifying the system:
+
+```bash
+./scripts/common/15-tmux.sh --dry-run
+```
+
+The module manages `~/.tmux.conf`; an existing XDG `tmux/tmux.conf` takes
+precedence and must be consolidated into that file before installation.
+After installing, start tmux or reload an existing session with
+`tmux source-file ~/.tmux.conf`. `Ctrl+A`, followed by `r`, reloads the project
+configuration; `Ctrl+A`, followed by uppercase `I`, remains a manual plugin
+installation shortcut.
 
 On native Fedora, the `desktop` profile installs `JetBrainsMono Nerd Font`
 into `~/.local/share/fonts`. Select that family in your terminal and reopen it.

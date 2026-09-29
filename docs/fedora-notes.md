@@ -78,8 +78,11 @@ No terminal package, DMS theme, or compositor configuration is installed.
   restored through an explicit official-repository upgrade, followed by a
   successful local dependency check. Repository metadata checksum errors and
   timeouts still need separate investigation.
-- The Alacritty/Ghostty settings were confirmed manually before being added to
-  the repository. The new configuration modules still need manual execution.
+- Alacritty/Ghostty configuration modules and Wayland clipboard round-trip
+  were confirmed manually.
+- tmux package/TPM/configuration installation and interactive plugin installation
+  passed manually. The revised `15-tmux.sh` now owns package installation and
+  automatic plugin downloads; that revised workflow still needs manual execution.
 
 Installation of the remaining modules, service startup, graphical clipboard use, and
 Ubuntu guest installation remain to be validated on the target systems before

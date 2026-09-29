@@ -161,6 +161,10 @@ run_selected_module() {
         "$module" "$filename" "${XDG_CONFIG_HOME:-$HOME/.config}" "$module" "$filename"
       printf '    requires: existing %s and JetBrainsMono Nerd Font; changed config is backed up\n' "$module"
     fi
+    if [[ "$module" == tmux ]]; then
+      printf '    config: dotfiles/.tmux.conf -> %s/.tmux.conf (back up differences)\n' "$HOME"
+      printf '    plugins: install TPM and all declared plugins automatically using a temporary tmux service\n'
+    fi
   fi
 }
 

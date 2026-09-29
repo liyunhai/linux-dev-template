@@ -9,7 +9,7 @@
 
 ### L1 Base packages
 Common tools used by everything else:
-- build-essential, git, curl, gnupg, unzip, jq, tmux, ripgrep, fd, etc.
+- build-essential, git, curl, gnupg, unzip, jq, ripgrep, fd, etc.
 
 ### L2 Shell / terminal UX
 - zsh
@@ -24,6 +24,12 @@ Common tools used by everything else:
 - Herdr
 - Yazi
 - host-side Nerd Font configuration
+
+The `tmux` module owns program installation, clipboard dependencies, TPM,
+the project configuration, and automatic plugin installation. The base module
+does not install tmux. TPM's command-line installer uses a temporary tmux server
+with a separate socket, leaving active user sessions available. Cleanup runs
+on both success and failure.
 
 ### L3 Environment management
 - direnv for per-project env activation
