@@ -76,6 +76,8 @@ and `devtools`.
 
 The exact packages and other installed items for each script are listed in
 [the installation inventory](docs/installation-inventory.md).
+For the Fedora Workstation commands in installation order, see the
+[step-by-step installation guide](docs/fedora-workstation-install.md).
 
 The previous `server` profile has been replaced by `cli` with optional services
 selected through `--with postgres,nginx`. The `desktop` profile now targets
