@@ -79,11 +79,13 @@ No terminal package, DMS theme, or compositor configuration is installed.
 - The revised `15-tmux.sh` dry run and automatic plugin workflow both passed
   manual validation. TPM and the configuration were retained on a rerun, and
   all declared plugins were found installed.
+- The account login shell is now `/usr/bin/zsh`; the project `.zshrc` and
+  Oh My Zsh environment are installed.
 - Fedora's `shfmt` package formats shell input correctly, although
   `shfmt --version` prints no text on this machine.
 - During the original base installation, DNF downgraded C++ runtime and fcitx5
   packages; an explicit upgrade from Fedora's official repositories restored
   them, and `dnf check --dependencies` found no issues afterward.
 
-The permanent zsh login-shell change, optional PostgreSQL/nginx service modules,
-and Ubuntu guest installation remain to be validated before merging this branch.
+The optional PostgreSQL/nginx service modules and Ubuntu guest installation
+remain to be validated before merging this branch.
