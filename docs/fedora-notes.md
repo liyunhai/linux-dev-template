@@ -87,5 +87,5 @@ No terminal package, DMS theme, or compositor configuration is installed.
   packages; an explicit upgrade from Fedora's official repositories restored
   them, and `dnf check --dependencies` found no issues afterward.
 
-The optional PostgreSQL/nginx service modules and Ubuntu guest installation
-remain to be validated before merging this branch.
+Manual validation of the optional PostgreSQL/nginx service modules and Ubuntu
+guest installation is deferred.
